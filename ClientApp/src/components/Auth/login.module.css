@@ -1,0 +1,9 @@
+.loginForm {
+  margin: 2rem auto;
+  max-width: 600px;
+}
+
+.loginForm > h2 {
+  margin: 0.5em;
+  text-align: center;
+}

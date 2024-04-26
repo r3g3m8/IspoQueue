@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import Button from '../Button/index.tsx';
 import { LockOutlined, UserOutlined } from '@ant-design/icons';
 import { Checkbox, Form, FormProps, Input } from 'antd'
+import styles from "./login.module.css";
 
 const Login = () => {
     const [login, setlogin] = useState('');
@@ -33,9 +34,9 @@ const Login = () => {
         <div>
             <Form
                 name="normal_login"
-                className="login-form"
+                className={styles.loginForm}
                 labelCol={{ span: 4 }}
-                style={{ maxWidth: 600 }}      
+                layout="vertical"    
                 initialValues={{ remember: true }}
                 onFinish={onFinish}
                 onFinishFailed={onFinishFailed}
