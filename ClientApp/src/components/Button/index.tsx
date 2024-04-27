@@ -5,6 +5,7 @@ type props = {
     children: React.ReactNode;
     onClick?: () => void;
     secondary?: boolean;
+    queue?: boolean;
     outline?: boolean;
     expand?: boolean;
     link?: boolean;
@@ -21,6 +22,10 @@ export default function Button(props: props) {
 
     if (props.secondary) {
         button_styles += " " + styles.secondary;
+    }
+
+    if (props.queue) {
+        button_styles += " " + styles.queue;
     }
 
     if (props.link) {

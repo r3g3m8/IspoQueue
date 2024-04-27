@@ -1,28 +1,21 @@
 import React, { useState } from 'react';
 import Button from '../Button/index.tsx';
 import { LockOutlined, UserOutlined } from '@ant-design/icons';
-import { Checkbox, Form, FormProps, Input } from 'antd'
+import { Form, FormProps, Input } from 'antd'
 import styles from "./login.module.css";
 
 const Login = () => {
     const [login, setlogin] = useState('');
     const [password, setPassword] = useState('');
 
-    const handleSubmit = (e) => {
-        e.preventDefault();
-        // Здесь можно добавить логику для отправки данных на сервер для аутентификации
-        console.log('Логин:', login);
-        console.log('Пароль:', password);
-        // После отправки данных на сервер можно добавить обработку ответа и перенаправление пользователя на другую страницу
-    };
-
     type FieldType = {
         login?: string;
         password?: string;
-        remember?: string;
     };
 
     const onFinish: FormProps<FieldType>['onFinish'] = (values) => {
+        console.log('Логин:', login);
+        console.log('Пароль:', password);
         console.log('Success:', values);
     };
 
@@ -36,23 +29,25 @@ const Login = () => {
                 name="normal_login"
                 className={styles.loginForm}
                 labelCol={{ span: 4 }}
-                layout="vertical"    
+                layout="vertical"
+                style={{ fontSize: '22px' }}
                 initialValues={{ remember: true }}
                 onFinish={onFinish}
                 onFinishFailed={onFinishFailed}
                 autoComplete="off"
             >
-                <h2>Вход</h2>
-                
+                <h1>Вход</h1>
+
                 <Form.Item<FieldType>
                     label="Логин"
                     name="login"
+                    className={styles.inputLabel}
                     rules={[{ required: true, message: 'Введите логин!' }]}
                 >
                     <Input
-                        
-                        prefix={<UserOutlined className="site-form-item-icon" />} 
+                        prefix={<UserOutlined className="site-form-item-icon" />}
                         placeholder="Логин"
+                        style={{ fontSize: '16px' }}
                         value={login}
                         onChange={(e) => setlogin(e.target.value)} />
                 </Form.Item>
@@ -68,11 +63,12 @@ const Login = () => {
                         prefix={<LockOutlined className="site-form-item-icon" />}
                         value={password}
                         placeholder="Пароль"
+                        style={{ fontSize: '16px' }}
                         onChange={(e) => setPassword(e.target.value)} />
                 </Form.Item>
 
                 <Form.Item>
-                    <Button>Войти</Button>
+                    <Button submit>Войти</Button>
                 </Form.Item>
             </Form>
         </div>

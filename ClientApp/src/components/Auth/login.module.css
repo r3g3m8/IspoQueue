@@ -3,7 +3,11 @@
   max-width: 600px;
 }
 
-.loginForm > h2 {
+.loginForm > h1 {
   margin: 0.5em;
   text-align: center;
+}
+
+.inputLabel {
+  font-size: 18px;
 }

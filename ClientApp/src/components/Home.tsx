@@ -1,6 +1,10 @@
 import React, { useEffect } from 'react';
 import Login from './Auth/Login.tsx';
 import { useNavigate } from 'react-router-dom';
+import Button from './Button/index.tsx';
+import { Container } from 'reactstrap';
+import { Flex, Segmented } from 'antd';
+
 
 function Home() {
   // cookie check???
@@ -16,7 +20,17 @@ function Home() {
 
   return (
     <div>
-      <h1>Электронная очередь</h1>
+      <Container className='d-flex flex-column align-items-center justify-content-center'>
+        <h1>Выберите услугу</h1>
+        <Flex gap="middle" align="center" vertical>
+          <Flex justify="space-between" align="center" vertical>
+            <Button href='/submission' queue>Подача документов</Button>
+            <Button href='/consultations' queue>Консультации</Button>
+            <Button href='' queue>Прием оригиналов документов об образовании / Выдача документов</Button>
+          </Flex>
+        </Flex>
+
+      </Container>
     </div>
   )
 }

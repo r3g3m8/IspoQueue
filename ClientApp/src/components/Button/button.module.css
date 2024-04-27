@@ -4,6 +4,7 @@
     color: #fff;
     border-radius: 20px;
     padding: 0.7rem 3rem;
+    margin: 1rem 0;
     width: 100%;
     font-size: 1rem;
     font-weight: 600;
@@ -23,6 +24,19 @@
 
 .secondary:hover {
     background: #696969;
+}
+
+.queue {
+    background: #319F42;
+    border: 1px solid transparent;
+    color: #fff;
+    border-radius: 20px;
+    padding: 2rem 7rem;
+    font-size: 1.2rem;
+    width: 700px;
+    /*width: 100%;
+    text-align: center;
+    cursor: pointer;*/
 }
 
 .outline {
