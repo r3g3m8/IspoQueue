@@ -1,15 +1,13 @@
 import React, { useEffect } from 'react';
-import Login from './Auth/Login.tsx';
 import { useNavigate } from 'react-router-dom';
 import Button from './Button/index.tsx';
 import { Container } from 'reactstrap';
-import { Flex, Segmented } from 'antd';
+import { Flex } from 'antd';
 
 
 function Home() {
   // cookie check???
   const isAuthenticated = true;
-
   const navigate = useNavigate();
 
   useEffect(() => {
