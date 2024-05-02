@@ -1,0 +1,55 @@
+.image:hover {
+    cursor: pointer;
+}
+
+.addUserForm {
+    display: flex;
+    flex-direction: column;
+    width: 1000px;
+    margin-top: 1rem;
+  }
+  
+  .formGroup {
+    width: 100%;
+    margin-bottom: 1rem;
+    margin-right: 2rem;
+  }
+  
+  .formGroup label {
+    display: block;
+    margin-bottom: 5px;
+  }
+  
+  .formGroup select,
+  .formGroup input[type='text'],
+  .formGroup input[type='password'],
+  .formGroup input[type='number'] {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    padding: 5px;
+    border: 1px solid #ccc;
+    border-radius: 10px;
+  }
+  
+  .formGroup select[multiple] {
+    height: 100px;
+  }
+
+  .chips { 
+	background: red;
+  }
+
+  .multiSelectContainer li  {
+    background: white ;
+    color: black !important
+  }
+
+  .multiSelectContainer li:hover  {
+    background: #319f42 !important;
+    color: white !important;
+  }
+
+  .error {
+    color: red;
+  }
