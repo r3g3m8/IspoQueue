@@ -12,6 +12,8 @@ function Home() {
   // cookie check???
 
   const isAuthenticated = true;
+  
+  // Чтобы поменять роль и отобразить другие страницы, пока все через костыли
   let role = "display";
   const navigate = useNavigate();
 
