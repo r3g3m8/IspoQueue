@@ -51,7 +51,7 @@ function Admin() {
     };
 
     function handleAddUser(): void {
-        setUser(true)
+        setUser(!user)
     }
 
     function handleNumericInputChange(value: string, setter: React.Dispatch<React.SetStateAction<string>>): void {
@@ -62,9 +62,9 @@ function Admin() {
     return (
         <Container className='d-flex flex-column align-items-center justify-content-center'>
             <h1>Панель управления</h1>
-            <Container>
-                <h3>Управление кабинетами</h3>
-                <img className={styles.image} src={Add} onClick={handleAddUser}></img>
+            <Container className='p-0'>
+                <h3>Управление операторами</h3>
+                <img className={styles.image} src={Add} onClick={handleAddUser} width={60}></img>
                 {user && <form className={styles.addUserForm} onSubmit={handleSubmit}>
                     <Flex justify='space-between'>
                         <div className={styles.formGroup}>

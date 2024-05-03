@@ -4,12 +4,15 @@ import Button from './Button/index.tsx';
 import { Container } from 'reactstrap';
 import { Flex } from 'antd';
 import Admin from './Admin/index.tsx';
+import Display from './Display/index.tsx';
+import Operator from './Operator/index.tsx';
 
 
 function Home() {
   // cookie check???
+
   const isAuthenticated = true;
-  const role = "admin";
+  let role = "display";
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -20,11 +23,10 @@ function Home() {
 
   return (
     <div>
-
-
       {role == "admin" ?
-          <Admin />
-        : <>
+        <Admin />
+        : role == "display" ? <Display /> : 
+         role == "operator" ? <Operator /> : <>
           <Container className='d-flex flex-column align-items-center justify-content-center'>
             <h1>Выберите услугу</h1>
             <Flex gap="middle" align="center" vertical>

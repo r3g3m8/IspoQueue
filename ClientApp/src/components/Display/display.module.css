@@ -1,0 +1,25 @@
+.table {
+    width: 100%;
+    border: 3px solid green;
+    font-size: 22px;
+    margin-top: 2rem;
+}
+
+.table td,
+.table th {
+    border: 1px solid green;
+    text-align: center;
+    padding: 0.5rem 0;
+}
+
+.completed {
+    color: red;
+}
+
+.active {
+    color: #319F42;
+}
+
+.waiting {
+    color: #184bb8;
+}

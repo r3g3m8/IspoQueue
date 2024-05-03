@@ -17,15 +17,6 @@
 	opacity: 90%;
 }
 
-.secondary {
-    background: var(--border);
-    color: var(--title);
-}
-
-.secondary:hover {
-    background: #696969;
-}
-
 .queue {
     background: #319F42;
     border: 1px solid transparent;
@@ -39,6 +30,11 @@
     cursor: pointer;*/
 }
 
+.next {
+    width: 75%;
+    font-size: 1.5rem;
+}
+
 .outline {
     background: transparent;
     color: var(--title);
@@ -47,15 +43,6 @@
 
 .outline:hover {
     border: var(--border-width) solid var(--accent);
-}
-
-.ghost {
-    background: transparent;
-    color: var(--title);
-}
-
-.ghost:hover {
-    background: var(--border);
 }
 
 .destructive {

@@ -4,7 +4,7 @@ import styles from "./button.module.css";
 type props = {
     children: React.ReactNode;
     onClick?: () => void;
-    secondary?: boolean;
+    next?: boolean;
     queue?: boolean;
     outline?: boolean;
     expand?: boolean;
@@ -20,8 +20,8 @@ type props = {
 export default function Button(props: props) {
     let button_styles = styles.primary;
 
-    if (props.secondary) {
-        button_styles += " " + styles.secondary;
+    if (props.next) {
+        button_styles += " " + styles.next;
     }
 
     if (props.queue) {
@@ -72,6 +72,7 @@ export default function Button(props: props) {
 				<button
 					className={button_styles}
 					onClick={props.onClick}
+                    disabled={props.disabled}
 					type={props.submit ? "submit" : "button"}
 				>
 					{props.children}
