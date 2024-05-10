@@ -23,39 +23,29 @@ namespace IspoQueue.Migrations
 
             modelBuilder.Entity("Queue", b =>
                 {
-                    b.Property<int>("Id")
+                    b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("integer");
+                        .HasColumnType("uuid");
 
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
-
-                    b.Property<DateOnly>("Date")
+                    b.Property<DateOnly>("CreationTime")
                         .HasColumnType("date");
 
-                    b.Property<string>("Key")
-                        .IsRequired()
+                    b.Property<string>("Number")
                         .HasColumnType("text");
 
-                    b.Property<int?>("OperatorId")
+                    b.Property<int?>("StatusId")
                         .HasColumnType("integer");
 
-                    b.Property<int?>("ServiceId")
-                        .HasColumnType("integer");
-
-                    b.Property<int>("Status")
-                        .HasColumnType("integer");
-
-                    b.Property<TimeOnly?>("TimeEnd")
+                    b.Property<TimeOnly>("TimeEnd")
                         .HasColumnType("time without time zone");
 
-                    b.Property<TimeOnly?>("TimeStart")
+                    b.Property<TimeOnly>("TimeStart")
                         .HasColumnType("time without time zone");
+
+                    b.Property<Guid?>("WindowId")
+                        .HasColumnType("uuid");
 
                     b.HasKey("Id");
-
-                    b.HasIndex("OperatorId");
-
-                    b.HasIndex("ServiceId");
 
                     b.ToTable("Queue");
                 });
@@ -69,68 +59,36 @@ namespace IspoQueue.Migrations
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
                     b.Property<string>("Name")
-                        .IsRequired()
                         .HasColumnType("text");
 
-                    b.Property<int?>("UserId")
-                        .HasColumnType("integer");
-
                     b.HasKey("Id");
-
-                    b.HasIndex("UserId");
 
                     b.ToTable("Services");
                 });
 
             modelBuilder.Entity("User", b =>
                 {
-                    b.Property<int>("Id")
+                    b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("integer");
+                        .HasColumnType("uuid");
 
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+                    b.Property<string>("FirstName")
+                        .HasColumnType("text");
 
                     b.Property<string>("Login")
                         .IsRequired()
                         .HasColumnType("text");
 
-                    b.Property<string>("Password")
+                    b.Property<string>("PasswordHash")
                         .IsRequired()
                         .HasColumnType("text");
 
-                    b.Property<int>("Role")
-                        .HasColumnType("integer");
+                    b.Property<string>("SecondName")
+                        .HasColumnType("text");
 
                     b.HasKey("Id");
 
                     b.ToTable("Users");
-                });
-
-            modelBuilder.Entity("Queue", b =>
-                {
-                    b.HasOne("User", "Operator")
-                        .WithMany()
-                        .HasForeignKey("OperatorId");
-
-                    b.HasOne("Services", "Service")
-                        .WithMany()
-                        .HasForeignKey("ServiceId");
-
-                    b.Navigation("Operator");
-
-                    b.Navigation("Service");
-                });
-
-            modelBuilder.Entity("Services", b =>
-                {
-                    b.HasOne("User", null)
-                        .WithMany("Services")
-                        .HasForeignKey("UserId");
-                });
-
-            modelBuilder.Entity("User", b =>
-                {
-                    b.Navigation("Services");
                 });
 #pragma warning restore 612, 618
         }
