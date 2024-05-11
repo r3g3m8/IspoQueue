@@ -23,5 +23,15 @@ public class AppDbContext : DbContext
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         // Добавьте здесь настройки моделей и отношений между ними, если это необходимо
+        // связи таблицы queue
+        /* modelBuilder.Entity<Queue>()
+            .HasOne(q => q.Window)
+            .WithMany()
+            .HasForeignKey(q => q.WindowId);
+        
+        modelBuilder.Entity<Queue>()
+            .HasOne(q => q.Status)
+            .WithMany()
+            .HasForeignKey(q => q.StatusId); */
     }
 }

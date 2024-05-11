@@ -4,6 +4,7 @@
   "private": true,
   "dependencies": {
     "antd": "^5.16.4",
+    "axios": "^1.6.8",
     "bootstrap": "^5.2.3",
     "http-proxy-middleware": "^2.0.6",
     "jquery": "^3.6.4",

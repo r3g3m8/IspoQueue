@@ -1,6 +1,8 @@
-import React from 'react'
+import React, { useEffect, useState } from 'react'
 import { Container, Table } from 'reactstrap'
 import styles from './display.module.css'
+import fetchQueue from '../../services/getQueue.ts';
+import axios from "axios";
 
 function Display() {
     let data: { key: string, cabinet: number, window: number }[] = [
@@ -9,9 +11,25 @@ function Display() {
         { "key": "П200", "cabinet": 110, "window": 2 }
     ];
 
+    const [queue, setQueue] = useState([]);
 
-    const queue = data.length > 0 ? data.map((d) => {
-        return <tr key={d.key}>
+    useEffect(() => {
+        const fetchData = async () => {
+            try {
+                const response = await axios.get('/api/queue'); // Замените '/queue' на путь к вашему контроллеру на бэкенде
+                console.log(response.data);
+                setQueue(response.data);
+            } catch (error) {
+                console.error('Ошибка при загрузке очереди:', error);
+            }
+        };
+
+        fetchData();
+    }, []);
+
+
+    const q = queue != undefined ? queue.map((q) => {
+        return <tr key={q.id}>
             <td>{d.key}</td>
             <td>{d.cabinet}</td>
             <td>{d.window}</td>
@@ -30,7 +48,7 @@ function Display() {
                         </tr>
                     </thead>
                     <tbody>
-                        {queue}
+                        {q}
                     </tbody>
                 </table>
             </Container>
