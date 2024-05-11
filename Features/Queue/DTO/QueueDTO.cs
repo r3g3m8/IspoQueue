@@ -1,4 +1,6 @@
-public class Queue {
+﻿namespace IspoQueue.Features.Queue.DTO;
+public class QueueDTO
+{
     public Guid Id { get; set; }
     public string? Number { get; set; } // rename to Key
     public DateOnly CreationTime { get; set; } // CreationDate
@@ -8,5 +10,4 @@ public class Queue {
     //public Status Status { get; set; }
     public Guid? WindowId { get; set; }
     //public Window Window { get; set; }
-
 }
