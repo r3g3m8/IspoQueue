@@ -1,4 +1,4 @@
-using IspoQueue.Controllers.Queue;
+using IspoQueue.DAL;
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);

@@ -1,4 +1,5 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using IspoQueue.DAL;
+using Microsoft.EntityFrameworkCore;
 
 namespace IspoQueue.App.Repositories;
 

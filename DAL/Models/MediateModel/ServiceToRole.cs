@@ -1,3 +1,5 @@
+namespace IspoQueue.DAL.Models.MediateModel;
+
 public class ServiceToRole
 {
     public Guid Id { get; set; }
