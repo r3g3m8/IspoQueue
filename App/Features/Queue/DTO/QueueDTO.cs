@@ -2,12 +2,10 @@
 public class QueueDto
 {
     public Guid Id { get; set; }
-    public string? Number { get; set; } // rename to Key
-    public DateOnly CreationTime { get; set; } // CreationDate
-    public TimeOnly TimeStart { get; set; }
-    public TimeOnly TimeEnd { get; set; }
+    public string? Number { get; set; } 
+    public DateTime CreationTime { get; set; }
+    public DateTime? TimeStart { get; set; }
+    public DateTime? TimeEnd { get; set; }
     public int? StatusId { get; set; }
-    //public Status Status { get; set; }
     public Guid? WindowId { get; set; }
-    //public Window Window { get; set; }
 }
