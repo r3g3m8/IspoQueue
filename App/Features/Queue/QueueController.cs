@@ -73,7 +73,7 @@ public class QueueController : ControllerBase
 
         try
         {
-            await _queueRepo.Create(new global::Queue());
+            await _queueRepo.Create(new global::IspoQueue.DAL.Models.Queue());
             return Ok();
         }
         catch (Exception ex)
