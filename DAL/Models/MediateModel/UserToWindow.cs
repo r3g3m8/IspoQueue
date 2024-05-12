@@ -1,3 +1,5 @@
+namespace IspoQueue.DAL.Models.MediateModel;
+
 public class UserToWindow {
     public Guid Id { get; set; }
     public Guid UserId { get; set; }
