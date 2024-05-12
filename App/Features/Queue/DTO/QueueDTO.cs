@@ -1,5 +1,5 @@
-﻿namespace IspoQueue.Features.Queue.DTO;
-public class QueueDTO
+﻿namespace IspoQueue.App.Features.Queue.DTO;
+public class QueueDto
 {
     public Guid Id { get; set; }
     public string? Number { get; set; } // rename to Key
