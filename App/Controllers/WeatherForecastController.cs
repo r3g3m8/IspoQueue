@@ -1,6 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 
-namespace IspoQueue.Controllers;
+namespace IspoQueue.App.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]

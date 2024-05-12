@@ -29,13 +29,19 @@
 
   <ItemGroup>
     <!-- Don't publish the SPA source files, but do show them in the project files list -->
+    <Compile Remove="App\Controllers\Contracts\**" />
     <Content Remove="$(SpaRoot)**" />
+    <Content Remove="App\Controllers\Contracts\**" />
+    <EmbeddedResource Remove="App\Controllers\Contracts\**" />
     <None Remove="$(SpaRoot)**" />
+    <None Remove="App\Controllers\Contracts\**" />
     <None Include="$(SpaRoot)**" Exclude="$(SpaRoot)node_modules\**" />
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="Controllers\Contracts" />
+    <None Include="App\ClientApp\package-lock.json" />
+    <None Include="App\ClientApp\package.json" />
+    <None Include="App\ClientApp\public\manifest.json" />
   </ItemGroup>
 
   <Target Name="DebugEnsureNodeEnv" BeforeTargets="Build" Condition=" '$(Configuration)' == 'Debug' And !Exists('$(SpaRoot)node_modules') ">
