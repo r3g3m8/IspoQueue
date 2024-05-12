@@ -1,3 +1,5 @@
+namespace IspoQueue.DAL.Enums;
+
 public enum Role
 {
     Terminal,

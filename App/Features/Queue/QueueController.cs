@@ -10,8 +10,8 @@ namespace IspoQueue.App.Features.Queue;
 [Route("api/[controller]")]
 public class QueueController : ControllerBase
 {
-    private readonly IGenericRepo<global::Queue> _queueRepo;
-    public QueueController(IGenericRepo<global::Queue> queueRepo)
+    private readonly IGenericRepo<DAL.Models.Queue> _queueRepo;
+    public QueueController(IGenericRepo<DAL.Models.Queue> queueRepo)
     {
         _queueRepo = queueRepo;
     }
@@ -51,19 +51,19 @@ public class QueueController : ControllerBase
     }
 
     [HttpPost]
-    public async Task<ActionResult> AddTicket(ServiceType type)
+    public async Task<ActionResult> AddTicket()
     {
         string ticketNumber;
-        switch (type)
-        {
-            case ServiceType.Consultation: ticketNumber = "К";break;
-            default: ticketNumber = type.ToString();break;
-        }
+        //switch (type)
+        //{
+        //    case ServiceType.Consultation: ticketNumber = "К";break;
+        //    default: ticketNumber = type.ToString();break;
+        //}
 
-        var queueItem = new global::Queue
+        var queueItem = new DAL.Models.Queue
         {
             Id = new Guid(),
-            Number = ticketNumber,
+            Number = null,
             CreationTime = DateTime.Now,
             TimeStart = null,
             TimeEnd = default,
@@ -73,7 +73,7 @@ public class QueueController : ControllerBase
 
         try
         {
-            await _queueRepo.Create(new global::Queue());
+            //await _queueRepo.Create(DAL.Models.Queue);
             return Ok();
         }
         catch (Exception ex)
