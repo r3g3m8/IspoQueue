@@ -1,4 +1,7 @@
 // YourDbContext.cs
+
+using IspoQueue.DAL.Models;
+using IspoQueue.DAL.Models.MediateModels;
 using Microsoft.EntityFrameworkCore;
 
 public class AppDbContext : DbContext
@@ -17,8 +20,17 @@ public class AppDbContext : DbContext
     }
 
     public DbSet<User> Users { get; set; }
-    public DbSet<Services> Services { get; set; }
+    public DbSet<Service> Services { get; set; }
+    public DbSet<UserRole> Roles { get; set; }
     public DbSet<Queue> Queue { get; set; }
+    public DbSet<QueueStatus> Status { get; set; }
+    public DbSet<Window> Windows { get; set; }
+    public DbSet<Cabinet> Cabinets { get; set; }
+
+    //MediateModel
+    public DbSet<ServiceToRole> ServicesToRoles { get; set; }
+    public DbSet<UserToRole> UserToRoles { get; set; }
+    public DbSet<UserToWindow> UserToWindows { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
