@@ -8,4 +8,5 @@ public class QueueDto
     public DateTime? TimeEnd { get; set; }
     public int? StatusId { get; set; }
     public Guid? WindowId { get; set; }
+    public int ServiceId { get; set; }
 }
