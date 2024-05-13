@@ -7,6 +7,7 @@ public class Queue {
     public DateTime? TimeStart { get; set; }
     public DateTime? TimeEnd { get; set; }
     public int? StatusId { get; set; }
+    public int ServiceId { get; set; }
     public Guid? WindowId { get; set; }
 
 }
