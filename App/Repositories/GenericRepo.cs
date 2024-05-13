@@ -28,6 +28,38 @@ public class GenericRepo<TEntity> : IGenericRepo<TEntity> where TEntity : class
         return e;
     }
 
+    public async Task<List<TEntity?>?> FindByIds(Guid?[] ids)
+    {
+        List<TEntity?> e = new List<TEntity?>();
+        foreach (var id in ids)
+        {
+            if(id.HasValue)
+                e.Add(await FindById(id.Value));
+        }
+
+        return e;
+    }
+
+    public async Task<TEntity?> FindById(int id)
+    {
+        var layers = await Get();
+        var e = await _dbSet.FindAsync(id);
+
+        return e;
+    }
+
+    public async Task<List<TEntity?>?> FindByIds(int?[] ids)
+    {
+        List<TEntity?> e = new List<TEntity?>();
+        foreach (var id in ids)
+        {
+            if (id.HasValue)
+                e.Add(await FindById(id.Value));
+        }
+
+        return e;
+    }
+
     public async Task<List<TEntity>?> Get()
     {
         var l = await _dbSet.AsNoTracking().ToListAsync();
