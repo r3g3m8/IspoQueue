@@ -4,14 +4,18 @@ import styles from './display.module.css'
 import fetchQueue from '../../services/getQueue.ts';
 import axios from "axios";
 
+interface Queue {
+    id: string;
+    number: string | null;
+    creationTime: string;
+    timeStart: string | null;
+    timeEnd: string | null;
+    statusId: number | null;
+    serviceId: number;
+    windowId: string | null;
+}
 function Display() {
-    let data: { key: string, cabinet: number, window: number }[] = [
-        { "key": "П100", "cabinet": 110, "window": 1 },
-        { "key": "K200", "cabinet": 115, "window": 1 },
-        { "key": "П200", "cabinet": 110, "window": 2 }
-    ];
-
-    const [queue, setQueue] = useState([]);
+    const [queue, setQueue] = useState<Queue[]>([]);
 
     useEffect(() => {
         const fetchData = async () => {
@@ -28,27 +32,35 @@ function Display() {
     }, []);
 
 
-    const q = queue != undefined ? queue.map((q) => {
-        return <tr key={q.id}>
-            <td>{d.key}</td>
-            <td>{d.cabinet}</td>
-            <td>{d.window}</td>
+    const q = queue.length > 0 ? queue.map(q => (
+        <tr key={q.id}>
+            <td>{q.number}</td>
+            <td>{q.creationTime}</td>
+            <td>{q.timeStart}</td>
+            <td>{q.timeEnd}</td>
+            <td>{q.statusId}</td>
+            <td>{q.serviceId}</td>
+            <td>{q.windowId}</td>
         </tr>
-    }) : <></>
+    )) : <></>
 
     return (
         <Container>
             <Container>
                 <table className={styles.table}>
                     <thead>
-                        <tr>
-                            <th>№ талона</th>
-                            <th>Кабинет</th>
-                            <th>Окно</th>
-                        </tr>
+                    <tr>
+                        <th>№ талона</th>
+                        <th>Дата создания</th>
+                        <th>Начало</th>
+                        <th>Конец</th>
+                        <th>Статус</th>
+                        <th>Услуга</th>
+                        <th>Окно</th>
+                    </tr>
                     </thead>
                     <tbody>
-                        {q}
+                    {q}
                     </tbody>
                 </table>
             </Container>
