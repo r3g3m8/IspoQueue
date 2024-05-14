@@ -65,12 +65,15 @@ public class QueueController : ControllerBase
     }
 
     [HttpPost]
-    public async Task<ActionResult> AddTicket(int serviceId)
+    public async Task<ActionResult> AddTicket([FromBody] TicketDTO request)
     {
+        if (request == null)
+            return Ok(new Response { Status = "Ошибка", Message = "Данные не передаются", });
+        
+        var serviceId = request.ServiceId;
         var service = await _serviceRepo.FindById(serviceId);
-
         if (service == null)
-            return Ok(new Response { Status = "Failed", Message = "Service not found", });
+            return Ok(new Response { Status = "Ошибка", Message = "Сервис не найден", });
 
         var queue = await _queueRepo.Get();
 
@@ -82,7 +85,7 @@ public class QueueController : ControllerBase
         {
             Id = new Guid(),
             Number = service.IdentityStr + ticketDigit,
-            CreationTime = DateTime.Now,
+            CreationTime = DateTime.UtcNow,
             TimeStart = null,
             TimeEnd = null,
             StatusId = (int)DAL.Enums.Status.New,
@@ -101,8 +104,8 @@ public class QueueController : ControllerBase
         }
     }
 
-    [HttpPost]
-    public async Task<ActionResult> GetTicket(Guid userId)
+    [HttpPut]
+    public async Task<ActionResult> AcceptTicket(Guid userId)
     {
         try
         {
@@ -171,7 +174,7 @@ public class QueueController : ControllerBase
                             Id = queueItem.Id,
                             Number = queueItem.Number,
                             CreationTime = queueItem.CreationTime,
-                            TimeStart = DateTime.Now,
+                            TimeStart = DateTime.UtcNow,
                             TimeEnd = null,
                             StatusId = (int)DAL.Enums.Status.Start,
                             ServiceId = queueItem.ServiceId,

@@ -1,8 +1,10 @@
+using IspoQueue.App.Repositories;
 using IspoQueue.DAL;
+using IspoQueue.DAL.Models;
+using IspoQueue.DAL.Models.MediateModel;
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
-
 // Add services to the container.
 
 builder.Services.AddControllersWithViews();
@@ -21,6 +23,13 @@ builder.Services.AddCors(options =>
         policy.AllowAnyMethod();
     });
 });
+
+builder.Services.AddScoped<IGenericRepo<Queue>, GenericRepo<Queue>>();
+builder.Services.AddScoped<IGenericRepo<Service>, GenericRepo<Service>>();
+builder.Services.AddScoped<IGenericRepo<UserToRole>, GenericRepo<UserToRole>>();
+builder.Services.AddScoped<IGenericRepo<ServiceToRole>, GenericRepo<ServiceToRole>>();
+builder.Services.AddScoped<IGenericRepo<UserToWindow>, GenericRepo<UserToWindow>>();
+builder.Services.AddScoped<IGenericRepo<Window>, GenericRepo<Window>>();
 
 var app = builder.Build();
 
