@@ -13,13 +13,6 @@ interface Queue {
     serviceId: number;
     window: string | null;
 }
-
-enum Direction {
-     "В ожидании" = 1,
-     "Активен" = 2,
-     "Завершен" = 3,
-     "Отменен" = 4,
-}
 function Display() {
     const [queue, setQueue] = useState<Queue[]>([]);
 
@@ -36,18 +29,18 @@ function Display() {
 
         fetchData();
     }, []);
-    
+
+
     const q = queue.length > 0 ? queue.map(q => (
         <tr key={q.id}>
             <td>{q.number}</td>
             <td>{q.creationTime}</td>
             <td>{q.timeStart}</td>
             <td>{q.timeEnd}</td>
-            <td>{Direction[q.serviceId]}</td>
+            <td>{q.serviceId}</td>
             <td>{q?.window}</td>
         </tr>
     )) : <></>
-    ///jgfijgfjigfjifgj
 
     return (
         <Container>

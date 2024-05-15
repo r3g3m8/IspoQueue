@@ -16,7 +16,7 @@ function Home() {
   const isAuthenticated = true;
   
   // Чтобы поменять роль и отобразить другие страницы, пока все через костыли
-  let role: Role = 'display';
+  let role: Role = 'operator';
   const navigate = useNavigate();
 
   useEffect(() => {
