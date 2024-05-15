@@ -50,11 +50,9 @@ public class QueueController : ControllerBase
                 {
                     var status = await _statusRepo.FindById(item.StatusId.Value);
                     var statusName = status.Name;
-
-                    var windowName = "";
+                    
                     var window = await _windowRepo.FindById(item.WindowId.Value);
-                    if (window != null)
-                        windowName = window.Name;
+                    var windowName = window.Name;
 
                     queueDto.Add(new QueueDto
                     {
@@ -79,18 +77,18 @@ public class QueueController : ControllerBase
     }
     
     [HttpGet("/api/queue/get")]
-    public async Task<IEnumerable<QueueDto>> GetOperatorQueue([FromQuery] QueueRequest param1)
+    public async Task<IEnumerable<QueueDto>> GetOperatorQueue([FromQuery] QueueRequest request)
     {
         try
         {
             var queueItems = await _queueRepo.Get();
             List<QueueDto> queueDto = new List<QueueDto>();
 
-            if (param1 == null)
-                return null;
+            if (request == null)
+                return new List<QueueDto>();
             
             var roles = await _userRolesRepo.Get();
-            var userRoles = roles.Where(r => r.UserId == param1.UserId).Select(r => r.RoleId);
+            var userRoles = roles.Where(r => r.UserId == request.UserId).Select(r => r.RoleId);
 
             var services = await _roleServicesRepo.Get();
             var userServices = services.Where(s => userRoles.Contains(s.RoleId)).Select(s => s.ServiceId);
@@ -126,14 +124,14 @@ public class QueueController : ControllerBase
             return new List<QueueDto>();
         }
     }
-
+    
     [HttpPost]
-    public async Task<ActionResult> AddTicket([FromBody] TicketDTO request)
+    public async Task<ActionResult> AddTicket([FromBody]TicketDTO id)
     {
-        if (request == null)
+        if (id == null)
             return Ok(new Response { Status = "Ошибка", Message = "Данные не передаются", });
         
-        var serviceId = request.ServiceId;
+        var serviceId = id.ServiceId;
         var service = await _serviceRepo.FindById(serviceId);
         if (service == null)
             return Ok(new Response { Status = "Ошибка", Message = "Сервис не найден", });
