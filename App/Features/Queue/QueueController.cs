@@ -5,6 +5,7 @@ using IspoQueue.DAL.Models;
 using IspoQueue.DAL.Models.MediateModel;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Status = IspoQueue.DAL.Enums.Status;
 
 namespace IspoQueue.App.Features.Queue;
 
@@ -18,9 +19,12 @@ public class QueueController : ControllerBase
     private readonly IGenericRepo<ServiceToRole> _roleServicesRepo;
     private readonly IGenericRepo<UserToWindow> _userWindowsRepo;
     private readonly IGenericRepo<Window> _windowRepo;
+    private readonly IGenericRepo<IspoQueue.DAL.Models.Status> _statusRepo;
 
     public QueueController(IGenericRepo<DAL.Models.Queue> queueRepo, IGenericRepo<Service> serviceRepo,
-        IGenericRepo<UserToRole> userRolesRepo, IGenericRepo<ServiceToRole> roleServicesRepo, IGenericRepo<UserToWindow> userWindowsRepo, IGenericRepo<Window> windowRepo)
+        IGenericRepo<UserToRole> userRolesRepo, IGenericRepo<ServiceToRole> roleServicesRepo,
+        IGenericRepo<UserToWindow> userWindowsRepo, IGenericRepo<Window> windowRepo,
+        IGenericRepo<DAL.Models.Status> statusRepo)
     {
         _queueRepo = queueRepo;
         _serviceRepo = serviceRepo;
@@ -28,6 +32,7 @@ public class QueueController : ControllerBase
         _roleServicesRepo = roleServicesRepo;
         _userWindowsRepo = userWindowsRepo;
         _windowRepo = windowRepo;
+        _statusRepo = statusRepo;
     }
 
     [HttpGet]
@@ -35,14 +40,22 @@ public class QueueController : ControllerBase
     {
         try
         {
-
-            var queueItems = await _queueRepo.Get();
+            var allQueue = await _queueRepo.Get();
             List<QueueDto> queueDto = new List<QueueDto>();
 
-            if (queueItems != null)
+            if (allQueue != null)
             {
+                var queueItems = allQueue.Where(q => q.WindowId != null);
                 foreach (var item in queueItems)
                 {
+                    var status = await _statusRepo.FindById(item.StatusId.Value);
+                    var statusName = status.Name;
+
+                    var windowName = "";
+                    var window = await _windowRepo.FindById(item.WindowId.Value);
+                    if (window != null)
+                        windowName = window.Name;
+
                     queueDto.Add(new QueueDto
                     {
                         Id = item.Id,
@@ -50,8 +63,58 @@ public class QueueController : ControllerBase
                         CreationTime = item.CreationTime,
                         TimeStart = item.TimeStart,
                         TimeEnd = item.TimeEnd,
-                        StatusId = item.StatusId,
-                        WindowId = item.WindowId,
+                        Status = statusName,
+                        Window = windowName,
+                        ServiceId = item.ServiceId
+                    });
+                }
+            }
+
+            return queueDto.OrderByDescending(q => q.TimeStart);
+        }
+        catch (Exception ex)
+        {
+            return new List<QueueDto>();
+        }
+    }
+    
+    [HttpGet("/api/queue/get")]
+    public async Task<IEnumerable<QueueDto>> GetOperatorQueue([FromQuery] QueueRequest param1)
+    {
+        try
+        {
+            var queueItems = await _queueRepo.Get();
+            List<QueueDto> queueDto = new List<QueueDto>();
+
+            if (param1 == null)
+                return null;
+            
+            var roles = await _userRolesRepo.Get();
+            var userRoles = roles.Where(r => r.UserId == param1.UserId).Select(r => r.RoleId);
+
+            var services = await _roleServicesRepo.Get();
+            var userServices = services.Where(s => userRoles.Contains(s.RoleId)).Select(s => s.ServiceId);
+            
+            if (queueItems != null)
+            {
+                var lastQueue = queueItems.Where(q => userServices.Contains(q.ServiceId)).OrderBy(q => q.CreationTime).Take(5);
+                foreach (var item in lastQueue)
+                {
+                    var status = await _statusRepo.FindById(item.StatusId.Value);
+                    var statusName = status.Name;
+                    
+                    var window = await _windowRepo.FindById(item.WindowId.Value);
+                    var windowName = window.Name;
+                    queueDto.Add(new QueueDto
+                    {
+                        Id = item.Id,
+                        Number = item.Number,
+                        CreationTime = item.CreationTime,
+                        TimeStart = item.TimeStart,
+                        TimeEnd = item.TimeEnd,
+                        Status = statusName,
+                        Window = windowName,
+                        ServiceId = item.ServiceId
                     });
                 }
             }
@@ -88,7 +151,7 @@ public class QueueController : ControllerBase
             CreationTime = DateTime.UtcNow,
             TimeStart = null,
             TimeEnd = null,
-            StatusId = (int)DAL.Enums.Status.New,
+            StatusId = (int)DAL.Enums.Status.Waiting,
             ServiceId = serviceId,
             WindowId = null
         };
@@ -105,11 +168,14 @@ public class QueueController : ControllerBase
     }
 
     [HttpPut]
-    public async Task<ActionResult> AcceptTicket(Guid userId)
+    public async Task<ActionResult> AcceptTicket([FromBody] AcceptTicketDTO accept)
     {
         try
         {
-            //Get user windows
+            if (accept == null)
+                return Ok(new Response { Status = "Ошибка", Message = "Пользователь не найден." });
+
+            var userId = accept.UserId;
             var usersWindows = await _userWindowsRepo.Get();
             var userWindows = usersWindows?.Where(window => window.UserId == userId).Select(window => window.Id);
 
@@ -142,48 +208,50 @@ public class QueueController : ControllerBase
 
             if (usersRoles != null)
             {
+                // Взяли все роли у пользователя
                 var userRoles = usersRoles.Where(role => role.UserId == userId).Select(x => x?.RoleId).ToArray();
 
-
-                //Get roles services
-                var rolesService = await _roleServicesRepo.FindByIds(userRoles);
-                var roleServices = rolesService?.Select(service => service?.ServiceId).ToArray();
+                if (userRoles == null)
+                    return Ok(new Response { Status = "Ошибка", Message = "У пользователя не ролей" });
+                
+                // Получить все сервисы по ролям пользователя
+                var servicesToRole = await _roleServicesRepo.Get();
+                var roleServices = servicesToRole
+                    .Where(s => userRoles.Contains(s.RoleId))
+                    .Select(service => service?.ServiceId);
 
                 if (roleServices == null)
-                {
                     return Ok(new Response { Status = "Ошибка", Message = "Нет услуг" });
-                }
 
                 //Get all queue
                 var queue = await _queueRepo.Get();
 
                 if (queue == null)
-                {
                     return Ok(new Response { Status = "Ошибка", Message = "Очередь пуста" });
-                }
 
                 //Take first queue item
                 foreach (var service in roleServices)
                 {
-                    var queueItem = queue.FirstOrDefault(item => item.ServiceId == service && item.StatusId == 1);
+                    var queueItem = queue
+                        .OrderBy(q => q.CreationTime)
+                        .FirstOrDefault(item => item.ServiceId == service && item.StatusId == (int)Status.Waiting);
                     if (queueItem != null)
                     {
-
                         queueItem = new DAL.Models.Queue
                         {
                             Id = queueItem.Id,
                             Number = queueItem.Number,
                             CreationTime = queueItem.CreationTime,
-                            TimeStart = DateTime.UtcNow,
+                            TimeStart = DateTime.UtcNow, // Time only push
                             TimeEnd = null,
-                            StatusId = (int)DAL.Enums.Status.Start,
+                            StatusId = (int)DAL.Enums.Status.Active,
                             ServiceId = queueItem.ServiceId,
                             WindowId = userActiveWindow?.FirstOrDefault()?.Id
                         };
                         await _queueRepo.Update(queueItem);
                         return Ok(new Response { Status = "Успех", Message = "Заявка принята" });
                     }
-
+                    return Ok(new Response { Status = "Успех", Message = "Нет подходящего статуса заявки" });
                 }
             }
             return Ok(new Response { Status = "Ошибка", Message = "У оператора нет ролей" });

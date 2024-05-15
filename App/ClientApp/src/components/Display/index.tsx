@@ -10,9 +10,8 @@ interface Queue {
     creationTime: string;
     timeStart: string | null;
     timeEnd: string | null;
-    statusId: number | null;
     serviceId: number;
-    windowId: string | null;
+    window: string | null;
 }
 function Display() {
     const [queue, setQueue] = useState<Queue[]>([]);
@@ -21,7 +20,7 @@ function Display() {
         const fetchData = async () => {
             try {
                 const response = await axios.get('/api/queue'); // Замените '/queue' на путь к вашему контроллеру на бэкенде
-                console.log(response.data);
+                console.log(response.data)
                 setQueue(response.data);
             } catch (error) {
                 console.error('Ошибка при загрузке очереди:', error);
@@ -38,9 +37,8 @@ function Display() {
             <td>{q.creationTime}</td>
             <td>{q.timeStart}</td>
             <td>{q.timeEnd}</td>
-            <td>{q.statusId}</td>
             <td>{q.serviceId}</td>
-            <td>{q.windowId}</td>
+            <td>{q?.window}</td>
         </tr>
     )) : <></>
 
@@ -54,7 +52,6 @@ function Display() {
                         <th>Дата создания</th>
                         <th>Начало</th>
                         <th>Конец</th>
-                        <th>Статус</th>
                         <th>Услуга</th>
                         <th>Окно</th>
                     </tr>

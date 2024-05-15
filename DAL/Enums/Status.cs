@@ -2,8 +2,8 @@
 
 public enum Status
 {
-    New = 1,
-    Start = 2,
-    End = 3,
+    Waiting = 1,
+    Active = 2,
+    Completed = 3,
     Cancelled = 4,
 }
