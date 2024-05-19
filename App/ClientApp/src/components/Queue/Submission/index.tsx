@@ -1,12 +1,19 @@
 import React from 'react';
 import { Container } from 'reactstrap';
 import { Flex } from 'antd';
-import Button from '../../Button/index.tsx';
+import Button from '../../Button';
 import Back from '../../../public/Back.svg'
 import { useNavigate } from 'react-router-dom';
+import AllServices from "../../../Enums/AllServices";
+import fetchQueue from "../../../services/fetchQueue";
 
 function Submition() {
     const navigate = useNavigate();
+    const { addTicket } = fetchQueue();
+
+    const handleAddTicket = async (serviceId: number) => {
+        await addTicket(serviceId);
+    };
 
     return (
         <div>
@@ -17,8 +24,12 @@ function Submition() {
                         <img src={Back} width={90} alt='back' onClick={() => navigate(-1)}></img>
                     </Flex>
                     <Flex justify="space-between" align="center" vertical style={{ marginRight: '10rem' }}>
-                        <Button queue>Заполнение заявления в личном кабинете</Button>
-                        <Button queue>Оформление личного дела</Button>
+                        <Button onClick={() => handleAddTicket(
+                            AllServices["Заполнение заявления в личном кабинете"])}
+                                queue>Заполнение заявления в личном кабинете</Button>
+                        <Button onClick={() => handleAddTicket(
+                            AllServices["Оформление личного дела"])}
+                                queue>Оформление личного дела</Button>
                     </Flex>
                 </Flex>
             </Container>

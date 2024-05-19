@@ -36,7 +36,7 @@ public class QueueController : ControllerBase
     }
 
     [HttpGet]
-    public async Task<IEnumerable<QueueDto>> GetQueue()
+    public async Task<ActionResult<IEnumerable<QueueDto>>> GetQueue()
     {
         try
         {
@@ -70,27 +70,26 @@ public class QueueController : ControllerBase
                 }
             }
 
-            return queueDto.OrderByDescending(q => q.TimeStart);
+            return Ok(queueDto.OrderByDescending(q => q.TimeStart));
         }
         catch (Exception ex)
         {
-            return new List<QueueDto>();
-        }
+            return StatusCode(StatusCodes.Status500InternalServerError, new { Message = "An error occurred while processing your request.", Error = ex.Message });        }
     }
     
     [HttpGet("/api/queue/get")]
-    public async Task<IEnumerable<QueueDto>> GetOperatorQueue([FromQuery] QueueRequest param1)
+    public async Task<ActionResult<IEnumerable<QueueDto>>> GetOperatorQueue([FromQuery] QueueRequest queueRequest)
     {
         try
         {
             var queueItems = await _queueRepo.Get();
             List<QueueDto> queueDto = new List<QueueDto>();
 
-            if (param1 == null)
-                return null;
+            if (queueRequest == null)
+                return Ok(new Response() { Message = "Оператор не найден", Status = "Ошибка" });
             
             var roles = await _userRolesRepo.Get();
-            var userRoles = roles.Where(r => r.UserId == param1.UserId).Select(r => r.RoleId);
+            var userRoles = roles.Where(r => r.UserId == queueRequest.UserId).Select(r => r.RoleId);
 
             var services = await _roleServicesRepo.Get();
             var userServices = services.Where(s => userRoles.Contains(s.RoleId)).Select(s => s.ServiceId);
@@ -119,11 +118,11 @@ public class QueueController : ControllerBase
                 }
             }
 
-            return queueDto;
+            return Ok (queueDto);
         }
         catch (Exception ex)
         {
-            return new List<QueueDto>();
+            return StatusCode(StatusCodes.Status500InternalServerError, new { Message = "An error occurred while processing your request.", Error = ex.Message });
         }
     }
 

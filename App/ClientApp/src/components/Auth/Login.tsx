@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import Button from '../Button/index.tsx';
+import Button from '../Button';
 import { LockOutlined, UserOutlined } from '@ant-design/icons';
 import { Form, FormProps, Input } from 'antd'
 import styles from "./login.module.css";

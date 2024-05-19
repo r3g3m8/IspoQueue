@@ -1,19 +1,27 @@
 import { Flex } from 'antd'
-import React from 'react'
+import React, {useState} from 'react'
 import { Container } from 'reactstrap'
-import Button from '../Button/index.tsx'
+import Button from '../Button/index'
 import axios from 'axios';
+import AllServices from "../../Enums/AllServices";
+import fetchQueue from "../../services/fetchQueue";
+
+interface IService {
+    id: number;
+    name: string;
+    identityStr: string;
+}
+
 
 function Queue() {
+    const [services, setServices] = useState<IService[]>([]);
+    const { addTicket } = fetchQueue();
+    const fetchServices = async () => {
+        //const data = await getServices();
+        //setServices(data);
+    };
     const handleAddTicket = async (serviceId: number) => {
-        try {
-            const response = await axios.post('/api/Queue', { serviceId });
-            console.log(response.data);
-            // Добавьте здесь логику обработки успешного создания заявки
-        } catch (error) {
-            console.error('Error creating ticket:', error);
-            // Добавьте здесь логику обработки ошибки
-        }
+        await addTicket(serviceId);
     };
 
   return (
@@ -23,7 +31,10 @@ function Queue() {
               <Flex justify="space-between" align="center" vertical>
                 <Button href='/submission' queue>Подача документов</Button>
                 <Button href='/consultations' queue>Консультации</Button>
-                <Button onClick={() => handleAddTicket(1)} queue>Прием оригиналов документов об образовании / Выдача документов</Button>
+                <Button 
+                    onClick={() => handleAddTicket(
+                        AllServices["Прием оригиналов документов об образовании / Выдача документов"])} 
+                    queue>Прием оригиналов документов об образовании / Выдача документов</Button>
               </Flex>
             </Flex>
           </Container>

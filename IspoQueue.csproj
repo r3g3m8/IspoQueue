@@ -32,6 +32,7 @@
     <Compile Remove="App\Controllers\Contracts\**" />
     <Content Remove="$(SpaRoot)**" />
     <Content Remove="App\Controllers\Contracts\**" />
+    <Content Include="App\ClientApp\tsconfig.json" />
     <EmbeddedResource Remove="App\Controllers\Contracts\**" />
     <None Remove="$(SpaRoot)**" />
     <None Remove="App\Controllers\Contracts\**" />

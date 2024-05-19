@@ -3,7 +3,7 @@ import { Container } from 'reactstrap'
 import Add from '../../public/Add.svg'
 import styles from './admin.module.css'
 import { Flex, Form, FormProps, Input } from 'antd'
-import Button from '../Button/index.tsx'
+import Button from '../Button'
 import Multiselect from 'multiselect-react-dropdown';
 
 interface Queue {

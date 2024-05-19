@@ -1,9 +1,9 @@
 import React, { useEffect, useState } from 'react'
 import { Container } from 'reactstrap'
-import Button from '../Button/index.tsx'
 import NextImage from '../../public/Next.svg'
 import styles from '../Display/display.module.css'
 import axios from 'axios'
+import Button from "../Button";
 
 interface Queue {
     id: string;
@@ -52,12 +52,6 @@ function Operator() {
         </tr>
     }) : <></>
 
-    const textNext = () => {
-        return <>
-            <p>Следуюший</p>
-            <img src={NextImage} width={40}></img>
-        </>
-    }
     useEffect(() => {
         let timerInterval;
 
@@ -100,10 +94,10 @@ function Operator() {
         <Container>
             <h1>Вы опреатор который работает с очередю:</h1>
             <ul>
-                <li>{isTimerActive}</li>
+                <li>{"Констультации"}</li>
             </ul>
             <Container className='w-50 m-0 p-0'>
-                {!isTimerActive ? <Button Button onClick={() => handleNext(userId)} next>
+                {!isTimerActive ? <Button onClick={() => handleNext(userId)} next>
                     Следующий <img src={NextImage} width={35} className='mx-2'></img>
                 </Button> : <Button disabled>Осталось времени: {remainingTime}</Button>}
             </Container>

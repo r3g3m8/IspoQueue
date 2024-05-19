@@ -1,13 +1,19 @@
 import React from 'react';
 import { Container } from 'reactstrap';
 import { Flex } from 'antd';
-import Button from '../../Button/index.tsx';
+import Button from '../../Button';
 import Back from '../../../public/Back.svg'
 import { useNavigate } from 'react-router-dom';
+import AllServices from "../../../Enums/AllServices";
+import fetchQueue from "../../../services/fetchQueue";
 
 function Consultations() {
     const navigate = useNavigate();
-
+    const { addTicket } = fetchQueue();
+    const handleAddTicket = async (serviceId: number) =>  {
+        await addTicket(serviceId)
+    };
+    
     return (
         <div>
             <Container className='d-flex flex-column align-items-center justify-content-center'>
@@ -17,8 +23,12 @@ function Consultations() {
                         <img src={Back} width={90} alt='back' onClick={() => navigate(-1)}></img>
                     </Flex>
                     <Flex justify="space-between" align="center" vertical style={{ marginRight: '10rem' }}>
-                        <Button queue>Консультация по выбору специальностей</Button>
-                        <Button queue>Изменение приоритетов</Button>
+                        <Button onClick={() => handleAddTicket(
+                            AllServices["Консультация по выбору специальностей"])} 
+                                queue>Консультация по выбору специальностей</Button>
+                        <Button onClick={() => handleAddTicket(
+                            AllServices["Изменение приоритетов"])} 
+                                queue>Изменение приоритетов</Button>
                     </Flex>
                 </Flex>
 
