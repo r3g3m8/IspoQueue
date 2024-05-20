@@ -1,4 +1,5 @@
 ﻿using IspoQueue.DAL;
+using IspoQueue.DAL.Models;
 using Microsoft.EntityFrameworkCore;
 
 namespace IspoQueue.App.Repositories;
@@ -73,9 +74,16 @@ public class GenericRepo<TEntity> : IGenericRepo<TEntity> where TEntity : class
         await _context.SaveChangesAsync();
     }
 
-    public async Task Update(TEntity item)
+    public async Task<TEntity> Update(TEntity item)
     {
         _context.Entry(item).State = EntityState.Modified;
         await _context.SaveChangesAsync();
+        return item;
+    }
+
+    public async Task Delete(TEntity item)
+    {
+         _dbSet.Remove(item);
+         await _context.SaveChangesAsync();
     }
 }

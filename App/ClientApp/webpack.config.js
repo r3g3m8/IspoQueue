@@ -1,6 +1,7 @@
 ﻿const path = require('path');
 const webpack = require('webpack');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
+const TsconfigPathsPlugin = require('tsconfig-paths-webpack-plugin');
 
 module.exports = {
     entry: './src/index.tsx',
@@ -11,10 +12,7 @@ module.exports = {
     },
     resolve: {
         extensions: ['.ts', '.tsx', '.js', '.jsx'],
-        alias: {
-            '@services': path.resolve(__dirname, 'src/services/'),
-            '@enums': path.resolve(__dirname, 'src/enums/')
-        }
+        plugins: [new TsconfigPathsPlugin({ configFile: "./tsconfig.json" })]
     },
     module: {
         rules: [

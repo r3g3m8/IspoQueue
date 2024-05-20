@@ -14,10 +14,6 @@
     "strict": true,
     "noImplicitAny": false,
     "baseUrl": "./",
-    "paths": {
-      "@services/*": ["src/services/*"],
-      "@enums/*": ["src/enums/*"]
-    }
   },
   "include": ["src"],
   "exclude": ["node_modules", "build"]

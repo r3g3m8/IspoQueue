@@ -48,9 +48,6 @@ public class QueueController : ControllerBase
                 var queueItems = allQueue.Where(q => q.WindowId != null);
                 foreach (var item in queueItems)
                 {
-                    var status = await _statusRepo.FindById(item.StatusId.Value);
-                    var statusName = status.Name;
-
                     var windowName = "";
                     var window = await _windowRepo.FindById(item.WindowId.Value);
                     if (window != null)
@@ -63,7 +60,7 @@ public class QueueController : ControllerBase
                         CreationTime = item.CreationTime,
                         TimeStart = item.TimeStart,
                         TimeEnd = item.TimeEnd,
-                        Status = statusName,
+                        StatusId = item.StatusId,
                         Window = windowName,
                         ServiceId = item.ServiceId
                     });
@@ -78,18 +75,18 @@ public class QueueController : ControllerBase
     }
     
     [HttpGet("/api/queue/get")]
-    public async Task<ActionResult<IEnumerable<QueueDto>>> GetOperatorQueue([FromQuery] QueueRequest queueRequest)
+    public async Task<ActionResult<IEnumerable<QueueDto>>> GetOperatorQueue([FromQuery] QueueRequest operatorRequest)
     {
         try
         {
             var queueItems = await _queueRepo.Get();
             List<QueueDto> queueDto = new List<QueueDto>();
 
-            if (queueRequest == null)
+            if (operatorRequest == null)
                 return Ok(new Response() { Message = "Оператор не найден", Status = "Ошибка" });
             
             var roles = await _userRolesRepo.Get();
-            var userRoles = roles.Where(r => r.UserId == queueRequest.UserId).Select(r => r.RoleId);
+            var userRoles = roles.Where(r => r.UserId == operatorRequest.UserId).Select(r => r.RoleId);
 
             var services = await _roleServicesRepo.Get();
             var userServices = services.Where(s => userRoles.Contains(s.RoleId)).Select(s => s.ServiceId);
@@ -99,11 +96,14 @@ public class QueueController : ControllerBase
                 var lastQueue = queueItems.Where(q => userServices.Contains(q.ServiceId)).OrderBy(q => q.CreationTime).Take(5);
                 foreach (var item in lastQueue)
                 {
-                    var status = await _statusRepo.FindById(item.StatusId.Value);
-                    var statusName = status.Name;
-                    
-                    var window = await _windowRepo.FindById(item.WindowId.Value);
+                    var userWindows = await _userWindowsRepo.Get();
+                    var windowId = userWindows
+                        .Where(w => w.UserId == operatorRequest.UserId)
+                        .Select(w => w.WindowId)
+                        .FirstOrDefault();
+                    var window = await _windowRepo.FindById(windowId);
                     var windowName = window.Name;
+                    
                     queueDto.Add(new QueueDto
                     {
                         Id = item.Id,
@@ -111,7 +111,7 @@ public class QueueController : ControllerBase
                         CreationTime = item.CreationTime,
                         TimeStart = item.TimeStart,
                         TimeEnd = item.TimeEnd,
-                        Status = statusName,
+                        StatusId = item.StatusId,
                         Window = windowName,
                         ServiceId = item.ServiceId
                     });
@@ -167,7 +167,7 @@ public class QueueController : ControllerBase
     }
 
     [HttpPut]
-    public async Task<ActionResult> AcceptTicket([FromBody] AcceptTicketDTO accept)
+    public async Task<ActionResult<QueueDto>> AcceptTicket([FromBody] AcceptTicketDTO accept)
     {
         try
         {
@@ -233,7 +233,9 @@ public class QueueController : ControllerBase
                 {
                     var queueItem = queue
                         .OrderBy(q => q.CreationTime)
-                        .FirstOrDefault(item => item.ServiceId == service && item.StatusId == (int)Status.Waiting);
+                        .FirstOrDefault(item => item.ServiceId == service 
+                            && item.StatusId != (int)Status.Active
+                                && item.StatusId != (int)Status.Completed);
                     if (queueItem != null)
                     {
                         queueItem = new DAL.Models.Queue
@@ -247,10 +249,10 @@ public class QueueController : ControllerBase
                             ServiceId = queueItem.ServiceId,
                             WindowId = userActiveWindow?.FirstOrDefault()?.Id
                         };
-                        await _queueRepo.Update(queueItem);
-                        return Ok(new Response { Status = "Успех", Message = "Заявка принята" });
+                        var updatedTicket = await _queueRepo.Update(queueItem);
+                        return Ok(updatedTicket);
                     }
-                    return Ok(new Response { Status = "Успех", Message = "Нет подходящего статуса заявки" });
+                    return Ok(new Response { Status = "Ошибка", Message = "Нет подходящего статуса заявки" });
                 }
             }
             return Ok(new Response { Status = "Ошибка", Message = "У оператора нет ролей" });
@@ -258,6 +260,52 @@ public class QueueController : ControllerBase
         catch (Exception ex)
         {
             return Ok(new Response { Status = "Ошибка", Message = $"Заявка не принята. Error: {ex}" });
+        }
+    }
+    
+    [HttpDelete("{id}")]
+    public async Task<IActionResult> DeleteQueueItem(Guid id)
+    {
+        try
+        {
+            var queueItem = await _queueRepo.FindById(id);
+            if (queueItem == null)
+            {
+                return Ok(new Response { Status = "Ошибка", Message = $"Заявка не найдена. Обновите страницу!" });
+            }
+
+            await _queueRepo.Delete(queueItem);
+            return Ok(new Response { Status = "Успех", Message = $"Заявка завершена" });
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, $"Internal server error: {ex}");
+        }
+    }
+    
+    [HttpPut("defer/{id}")]
+    public async Task<IActionResult> DeferQueueItem(Guid id)
+    {
+        try
+        {
+            var queueItem = await _queueRepo.FindById(id);
+            if (queueItem == null)
+            {
+                return Ok(new Response { Status = "Ошибка", Message = $"Заявка не найдена. Обновите страницу!" });
+            }
+
+            // Устанавливаем новое время создания, чтобы переместить заявку в конец очереди
+            queueItem.CreationTime = DateTime.UtcNow;
+            queueItem.TimeStart = null;
+            queueItem.StatusId = (int)DAL.Enums.Status.Cancelled;
+            queueItem.WindowId = null;
+    
+            await _queueRepo.Update(queueItem);
+            return Ok(new Response { Status = "Успех", Message = $"Заявка отложена" });
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, $"Internal server error: {ex}");
         }
     }
 }

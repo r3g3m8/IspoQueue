@@ -1,4 +1,6 @@
-﻿namespace IspoQueue.App.Repositories;
+﻿using IspoQueue.DAL.Models;
+
+namespace IspoQueue.App.Repositories;
 
 public interface IGenericRepo<TEntity> where TEntity : class
 {
@@ -9,5 +11,6 @@ public interface IGenericRepo<TEntity> where TEntity : class
     Task<List<TEntity?>?> FindByIds(int?[] id);
     Task<List<TEntity>?> Get();
     Task Remove(TEntity item);
-    Task Update(TEntity item);
+    Task<TEntity> Update(TEntity item);
+    Task Delete(TEntity item);
 }

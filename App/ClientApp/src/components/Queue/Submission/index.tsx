@@ -4,8 +4,8 @@ import { Flex } from 'antd';
 import Button from '../../Button';
 import Back from '../../../public/Back.svg'
 import { useNavigate } from 'react-router-dom';
-import AllServices from "../../../Enums/AllServices";
 import fetchQueue from "../../../services/fetchQueue";
+import AllServices from 'src/enums/AllServices';
 
 function Submition() {
     const navigate = useNavigate();

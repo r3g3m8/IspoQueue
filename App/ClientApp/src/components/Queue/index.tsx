@@ -2,9 +2,8 @@ import { Flex } from 'antd'
 import React, {useState} from 'react'
 import { Container } from 'reactstrap'
 import Button from '../Button/index'
-import axios from 'axios';
-import AllServices from "../../Enums/AllServices";
 import fetchQueue from "../../services/fetchQueue";
+import AllServices from 'src/enums/AllServices';
 
 interface IService {
     id: number;
