@@ -1,6 +1,4 @@
-﻿using IspoQueue.App.Extensions;
-using IspoQueue.DAL;
-using IspoQueue.DAL.Models;
+﻿using IspoQueue.DAL;
 using Microsoft.EntityFrameworkCore;
 
 namespace IspoQueue.App.Repositories;
