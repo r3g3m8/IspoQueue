@@ -1,4 +1,5 @@
-﻿using IspoQueue.DAL;
+﻿using IspoQueue.App.Extensions;
+using IspoQueue.DAL;
 using IspoQueue.DAL.Models;
 using Microsoft.EntityFrameworkCore;
 
@@ -63,8 +64,7 @@ public class GenericRepo<TEntity> : IGenericRepo<TEntity> where TEntity : class
 
     public async Task<List<TEntity>?> Get()
     {
-        var l = await _dbSet.AsNoTracking().ToListAsync();
-
+        var l = await _dbSet.ToListAsync();
         return l;
     }
 
@@ -74,11 +74,10 @@ public class GenericRepo<TEntity> : IGenericRepo<TEntity> where TEntity : class
         await _context.SaveChangesAsync();
     }
 
-    public async Task<TEntity> Update(TEntity item)
+    public async Task Update(TEntity item)
     {
         _context.Entry(item).State = EntityState.Modified;
         await _context.SaveChangesAsync();
-        return item;
     }
 
     public async Task Delete(TEntity item)

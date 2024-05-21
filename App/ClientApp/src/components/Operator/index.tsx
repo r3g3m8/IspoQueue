@@ -33,7 +33,6 @@ function Operator() {
                 params: {
                     UserId: userId,
                 }}); // Замените '/queue' на путь к вашему контроллеру на бэкенде
-            console.log(response.data)
             setQueue(response.data);
         } catch (error) {
             console.error('Ошибка при загрузке очереди:', error);
@@ -46,7 +45,7 @@ function Operator() {
 
     useEffect(() => {
         if (queue.length > 0) {
-            const activeItem = queue.find(q => q.statusId === Statuses.Активен);
+            const activeItem = queue.find(q => q.statusId === Statuses.Active);
             if (activeItem) {
                 setNext(activeItem);
                 setComplete(true);
@@ -81,7 +80,8 @@ function Operator() {
 
     async function handleNext(userId: string): Promise<void> {
         try {
-            const response = await axios.put('/api/queue', {userId})
+            const response = await axios.put('/api/Queue', {userId})
+            console.log(response.data);
             setIsTimerActive(true);
             setRemainingTime(10); // Сброс времени на начальное значение
             setNext(response.data);
@@ -111,12 +111,11 @@ function Operator() {
     };
 
     const queueData = queue.length > 0 ? queue.map((q) => {
-        console.log(q.id);
         return <tr key={q.id.toString()}>
             <td>{q.number}</td>
             <td>{q.serviceId}</td>
-            <td className={q.statusId === Statuses.Заврешен ?
-                styles.completed : q.statusId === Statuses.Активен ?
+            <td className={q.statusId === Statuses.Completed ?
+                styles.completed : q.statusId === Statuses.Active ?
                     styles.active : styles.waiting}>{Statuses[q.statusId]}</td>
         </tr>
     }) : <></>

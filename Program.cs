@@ -31,6 +31,7 @@ builder.Services.AddScoped<IGenericRepo<ServiceToRole>, GenericRepo<ServiceToRol
 builder.Services.AddScoped<IGenericRepo<UserToWindow>, GenericRepo<UserToWindow>>();
 builder.Services.AddScoped<IGenericRepo<Window>, GenericRepo<Window>>();
 builder.Services.AddScoped<IGenericRepo<Status>, GenericRepo<Status>>();
+builder.Services.AddScoped<IGenericRepo<User>, GenericRepo<User>>();
 
 var app = builder.Build();
 
