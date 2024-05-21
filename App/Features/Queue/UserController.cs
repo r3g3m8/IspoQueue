@@ -1,5 +1,6 @@
 ﻿using System.Security.Cryptography;
 using System.Text;
+using IspoQueue.App.Features.Queue.DTO;
 using IspoQueue.App.Repositories;
 using IspoQueue.DAL.Models;
 using IspoQueue.DAL.Models.MediateModel;
@@ -20,6 +21,94 @@ namespace IspoQueue.App.Features.Queue
             _userRepo = userRepo;
             _userRolesRepo = userRolesRepo;
             _userWindowsRepo = userWindowsRepo;
+        }
+
+        [HttpGet]
+        public async Task<ActionResult<IEnumerable<UserDTO>>> GetUser()
+        {
+            var users = await _userRepo.Get();
+            List<UserDTO> userDtos = new();
+
+            if (users == null)
+            {
+                return Ok(new UserDTO());
+            }
+
+            foreach (var user in users)
+            {
+                var userDto = new UserDTO
+                {
+                    Id = user.Id,
+                    FirstName = user.FirstName,
+                    SecondName = user.SecondName,
+                    Login = user.Login,
+                    Password = user.PasswordHash,  // Обратите внимание, что реальный пароль не должен отправляться клиенту.
+                    Roles = user.UserRoles.Select(ur => ur.Role.Name).ToList(),
+                    Windows = user.UserWindows.Select(uw => new WindowDTO { Id = uw.Window.Id, Name = uw.Window.Name }).ToList()
+                };
+                userDtos.Add(userDto);
+            }
+            
+            return Ok(userDtos);
+        }
+        
+        [HttpGet("{id}")]
+        public async Task<ActionResult<UserDTO>> GetUserById(Guid id)
+        {
+            var user = await _userRepo.FindById(id);
+
+            if (user == null)
+            {
+                return NotFound();
+            }
+
+            var userDto = new UserDTO
+            {
+                Id = user.Id,
+                FirstName = user.FirstName,
+                SecondName = user.SecondName,
+                Login = user.Login,
+                Password = "расхэшированный",  // Обратите внимание, что реальный пароль не должен отправляться клиенту.
+                Roles = user.UserRoles.Select(ur => ur.Role.Name).ToList(),
+                Windows = user.UserWindows.Select(uw => new WindowDTO() { Id = uw.Window.Id, Name = uw.Window.Name }).ToList()
+            };
+
+            return Ok(userDto);
+        }
+
+        [HttpPut("{id}")]
+        public async Task<IActionResult> UpdateUser(Guid id, [FromBody] UpdateUserDto updateUserDto)
+        {
+            var user = await _userRepo.FindById(id);
+
+            if (user == null)
+            {
+                return NotFound();
+            }
+
+            user.FirstName = updateUserDto.FirstName;
+            user.SecondName = updateUserDto.SecondName;
+            user.Login = updateUserDto.Login;
+            user.PasswordHash = user.PasswordHash;
+
+            await _userRepo.Update(user);
+
+            return Ok(new Response { Status = "Успех", Message = "Пользователь добавлен" });
+        }
+
+        [HttpDelete("{id}")]
+        public async Task<IActionResult> DeleteUser(Guid id)
+        {
+            var user = await _userRepo.FindById(id);
+
+            if (user == null)
+            {
+                return NotFound();
+            }
+
+            await _userRepo.Delete(user);
+
+            return Ok(new Response { Status = "Успех", Message = "Пользователь добавлен" });
         }
 
         [HttpPost("/api/user/add")]

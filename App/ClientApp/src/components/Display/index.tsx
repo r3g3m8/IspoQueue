@@ -3,6 +3,7 @@ import { Container, Table } from 'reactstrap'
 import styles from './display.module.css'
 import fetchQueue from '../../services/fetchQueue';
 import axios from "axios";
+import moment from "moment/moment";
 
 interface Queue {
     id: string;
@@ -10,6 +11,7 @@ interface Queue {
     creationTime: string;
     timeStart: string | null;
     timeEnd: string | null;
+    serviceName: string | null;
     serviceId: number;
     window: string | null;
 }
@@ -34,10 +36,8 @@ function Display() {
     const q = queue.length > 0 ? queue.map(q => (
         <tr key={q.id}>
             <td>{q.number}</td>
-            <td>{q.creationTime}</td>
-            <td>{q.timeStart}</td>
-            <td>{q.timeEnd}</td>
-            <td>{q.serviceId}</td>
+            <td>{moment(q?.creationTime).format('DD.MM.yyyy HH:mm')}</td>
+            <td>{q.serviceName}</td>
             <td>{q?.window}</td>
         </tr>
     )) : <></>
@@ -50,9 +50,7 @@ function Display() {
                     <tr>
                         <th>№ талона</th>
                         <th>Дата создания</th>
-                        <th>Начало</th>
-                        <th>Конец</th>
-                        <th>Услуга</th>
+                        <th>Очередь</th>
                         <th>Окно</th>
                     </tr>
                     </thead>

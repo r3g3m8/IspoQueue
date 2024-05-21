@@ -3,6 +3,7 @@ using System;
 using IspoQueue.DAL;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace IspoQueue.DAL.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20240521140349_Service")]
+    partial class Service
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -117,7 +120,7 @@ namespace IspoQueue.DAL.Migrations
                     b.Property<int>("ServiceId")
                         .HasColumnType("integer");
 
-                    b.Property<int>("StatusId")
+                    b.Property<int?>("StatusId")
                         .HasColumnType("integer");
 
                     b.Property<DateTime?>("TimeEnd")
@@ -309,9 +312,7 @@ namespace IspoQueue.DAL.Migrations
 
                     b.HasOne("IspoQueue.DAL.Models.Status", "Status")
                         .WithMany("Queues")
-                        .HasForeignKey("StatusId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .HasForeignKey("StatusId");
 
                     b.HasOne("IspoQueue.DAL.Models.Window", "Window")
                         .WithMany("Queues")

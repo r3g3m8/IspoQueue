@@ -45,8 +45,8 @@ public class QueueController : ControllerBase
 
             if (allQueue != null)
             {
-                var queueItems = allQueue.Where(q => q.WindowId != null);
-                foreach (var item in queueItems)
+                //var queueItems = allQueue.Where(q => q.WindowId != null);
+                foreach (var item in allQueue)
                 {
                     queueDto.Add(new QueueDto
                     {
@@ -55,6 +55,7 @@ public class QueueController : ControllerBase
                         CreationTime = item.CreationTime,
                         TimeStart = item.TimeStart,
                         TimeEnd = item.TimeEnd,
+                        ServiceName = item.Service.Name,
                         StatusId = item.StatusId,
                         Window = item?.Window?.Name,
                         ServiceId = item.ServiceId
@@ -148,7 +149,7 @@ public class QueueController : ControllerBase
 
         var ticketDigit = 0;
         if (queue != null)
-            ticketDigit = queue.Select(x => x.ServiceId == serviceId).Count() % 100;
+            ticketDigit = queue.Select(x => x.ServiceId == serviceId).Count() % 100 + 1;
 
         var statuses = await _statusRepo.Get();
         if (statuses is null)

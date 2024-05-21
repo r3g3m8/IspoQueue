@@ -7,7 +7,7 @@ namespace IspoQueue.DAL.Models
         public Guid Id { get; set; }
         public string? Name { get; set; }
         
-        public virtual ICollection<UserToRole> UserRoles { get; set; }
-        public virtual ICollection<ServiceToRole> ServiceRoles { get; set; }
+        public virtual IEnumerable<UserToRole> UserRoles { get; set; }
+        public virtual IEnumerable<ServiceToRole> ServiceRoles { get; set; }
     }
 }

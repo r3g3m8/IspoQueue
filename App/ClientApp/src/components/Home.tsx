@@ -15,9 +15,9 @@ function Home() {
   useEffect(() => {
     if (!isAuthenticated) {
       navigate('/login');
-    } else {
+    } /*else {
       setRole('operator'); // Пример начального значения роли
-    }
+    }*/
   }, [isAuthenticated, navigate]);
 
   useEffect(() => {
