@@ -4,6 +4,6 @@
     {
         public Guid Id { get; set; }
         public string? Name { get; set; }
-        public virtual ICollection<Window> Windows { get; set; }
+        public virtual IEnumerable<Window> Windows { get; set; }
     }
 }

@@ -27,6 +27,7 @@ builder.Services.AddCors(options =>
 builder.Services.AddScoped<IGenericRepo<Queue>, GenericRepo<Queue>>();
 builder.Services.AddScoped<IGenericRepo<Service>, GenericRepo<Service>>();
 builder.Services.AddScoped<IGenericRepo<UserToRole>, GenericRepo<UserToRole>>();
+builder.Services.AddScoped<IGenericRepo<Role>, GenericRepo<Role>>();
 builder.Services.AddScoped<IGenericRepo<ServiceToRole>, GenericRepo<ServiceToRole>>();
 builder.Services.AddScoped<IGenericRepo<UserToWindow>, GenericRepo<UserToWindow>>();
 builder.Services.AddScoped<IGenericRepo<Window>, GenericRepo<Window>>();

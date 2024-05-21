@@ -62,8 +62,8 @@ public class GenericRepo<TEntity> : IGenericRepo<TEntity> where TEntity : class
 
     public async Task<List<TEntity>?> Get()
     {
-        var l = await _dbSet.ToListAsync();
-        return l;
+        var e = await _dbSet.ToListAsync();
+        return e;
     }
 
     public async Task Remove(TEntity item)

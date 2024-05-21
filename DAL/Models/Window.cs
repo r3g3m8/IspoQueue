@@ -8,6 +8,6 @@ public class Window {
     public bool IsActive { get; set; }
     public Guid CabinetId { get; set; }
     public virtual Cabinet Cabinet { get; set; }
-    public virtual ICollection<UserToWindow> UserWindows { get; set; }
-    public virtual ICollection<Queue> Queues { get; set; }
+    public virtual IEnumerable<UserToWindow> UserWindows { get; set; }
+    public virtual IEnumerable<Queue> Queues { get; set; }
 }

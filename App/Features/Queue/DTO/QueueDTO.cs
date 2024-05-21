@@ -6,7 +6,8 @@ public class QueueDto
     public DateTime CreationTime { get; set; }
     public DateTime? TimeStart { get; set; }
     public DateTime? TimeEnd { get; set; }
-    public int? StatusId { get; set; }
+    public string? ServiceName { get; set; }
+    public int StatusId { get; set; }
     public string Window { get; set; }
-    public int ServiceId { get; set; }
+    public int? ServiceId { get; set; }
 }

@@ -9,6 +9,6 @@ public class User
     public string? SecondName { get; set; }
     public string Login { get; set; }
     public string PasswordHash { get; set; }
-    public virtual ICollection<UserToRole> UserRoles { get; set; }
-    public virtual ICollection<UserToWindow> UserWindows { get; set; }
+    public virtual IEnumerable<UserToRole> UserRoles { get; set; }
+    public virtual IEnumerable<UserToWindow> UserWindows { get; set; }
 }
