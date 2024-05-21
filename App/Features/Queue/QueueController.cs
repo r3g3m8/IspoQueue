@@ -1,8 +1,10 @@
 ﻿using IspoQueue.App.Features.Queue.DTO;
 using IspoQueue.App.Repositories;
+using IspoQueue.DAL.Enums;
 using IspoQueue.DAL.Models;
 using IspoQueue.DAL.Models.MediateModel;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using Status = IspoQueue.DAL.Enums.Status;
 
 namespace IspoQueue.App.Features.Queue;
@@ -18,12 +20,11 @@ public class QueueController : ControllerBase
     private readonly IGenericRepo<UserToWindow> _userWindowsRepo;
     private readonly IGenericRepo<Window> _windowRepo;
     private readonly IGenericRepo<IspoQueue.DAL.Models.Status> _statusRepo;
-    private readonly IGenericRepo<User> _userRepo;
 
     public QueueController(IGenericRepo<DAL.Models.Queue> queueRepo, IGenericRepo<Service> serviceRepo,
         IGenericRepo<UserToRole> userRolesRepo, IGenericRepo<ServiceToRole> roleServicesRepo,
         IGenericRepo<UserToWindow> userWindowsRepo, IGenericRepo<Window> windowRepo,
-        IGenericRepo<DAL.Models.Status> statusRepo, IGenericRepo<User> userRepo)
+        IGenericRepo<DAL.Models.Status> statusRepo)
     {
         _queueRepo = queueRepo;
         _serviceRepo = serviceRepo;
@@ -32,7 +33,6 @@ public class QueueController : ControllerBase
         _userWindowsRepo = userWindowsRepo;
         _windowRepo = windowRepo;
         _statusRepo = statusRepo;
-        _userRepo = userRepo;
     }
 
     [HttpGet]
@@ -48,69 +48,10 @@ public class QueueController : ControllerBase
                 var queueItems = allQueue.Where(q => q.WindowId != null);
                 foreach (var item in queueItems)
                 {
-                    queueDto.Add(new QueueDto
-                    {
-                        Id = item.Id,
-                        Number = item.Number,
-                        CreationTime = item.CreationTime,
-                        TimeStart = item.TimeStart,
-                        TimeEnd = item.TimeEnd,
-                        StatusId = item.StatusId,
-                        Window = item?.Window?.Name,
-                        ServiceId = item.ServiceId
-                    });
-                }
-            }
-
-            return Ok(queueDto.OrderByDescending(q => q.TimeStart));
-        }
-        catch (Exception ex)
-        {
-            return Ok(new Response() { Status = "Ошибка", Message = $"Сервер выдал ошибку: {ex.Message}" });
-        }
-    }
-
-    [HttpGet("/api/queue/get")]
-    public async Task<ActionResult<IEnumerable<QueueDto>>> GetOperatorQueue([FromQuery] QueueRequest operatorRequest)
-    {
-        try
-        {
-            var queueItems = await _queueRepo.Get();
-            List<QueueDto> queueDto = new List<QueueDto>();
-
-            if (operatorRequest.UserId == Guid.Empty)
-                return Ok(new Response() { Message = "Оператор не найден", Status = "Ошибка" });
-
-            var user = await _userRepo.FindById(operatorRequest.UserId);
-            if (user is null)
-                return Ok(new Response() { Message = "Оператор не найден. Войдите заного", Status = "Ошибка" });
-            
-            var roles = user.UserRoles.Select(ur => ur.RoleId);
-            if(roles is null)
-                return Ok(new Response() { Message = "У оператора нет роли!", Status = "Ошибка" });
-            var services = await _roleServicesRepo.Get();
-            var userServices = services.Where(s => roles.Contains(s.RoleId)).Select(s => s.ServiceId);
-            if(userServices is null)
-                return Ok(new Response() { Message = "Оператор не работает ни с 1 очередью. Обратитесь к администратору!", Status = "Ошибка" });
-            
-            if (queueItems != null)
-            {
-                var lastQueue = queueItems
-                    .Where(q => userServices.Contains(q.ServiceId))
-                    .OrderBy(q => q.CreationTime)
-                    .Take(5);
-                foreach (var item in lastQueue)
-                {
-                    // есть флаг у окна IsActive его нужно использовать в фильтрации
-                    var userWindows = user.UserWindows;
-                    var window = userWindows
-                        .Select(w => w.Window)
-                        .Where(w => w.IsActive);
-                    if(window == null || !window.Any())
-                        return Ok(new Response() { Message = "У оператора нет активных окон", Status = "Ошибка" });
-
-                    var windowName = window.FirstOrDefault()?.Name;
-                    // хз норм нет
+                    var windowName = "";
+                    var window = await _windowRepo.FindById(item.WindowId.Value);
+                    if (window != null)
+                        windowName = window.Name;
 
                     queueDto.Add(new QueueDto
                     {
@@ -125,11 +66,63 @@ public class QueueController : ControllerBase
                     });
                 }
             }
+
+            return Ok(queueDto.OrderByDescending(q => q.TimeStart));
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(StatusCodes.Status500InternalServerError, new { Message = "An error occurred while processing your request.", Error = ex.Message });        }
+    }
+    
+    [HttpGet("/api/queue/get")]
+    public async Task<ActionResult<IEnumerable<QueueDto>>> GetOperatorQueue([FromQuery] QueueRequest operatorRequest)
+    {
+        try
+        {
+            var queueItems = await _queueRepo.Get();
+            List<QueueDto> queueDto = new List<QueueDto>();
+
+            if (operatorRequest == null)
+                return Ok(new Response() { Message = "Оператор не найден", Status = "Ошибка" });
+            
+            var roles = await _userRolesRepo.Get();
+            var userRoles = roles.Where(r => r.UserId == operatorRequest.UserId).Select(r => r.RoleId);
+
+            var services = await _roleServicesRepo.Get();
+            var userServices = services.Where(s => userRoles.Contains(s.RoleId)).Select(s => s.ServiceId);
+            
+            if (queueItems != null)
+            {
+                var lastQueue = queueItems.Where(q => userServices.Contains(q.ServiceId)).OrderBy(q => q.CreationTime).Take(5);
+                foreach (var item in lastQueue)
+                {
+                    var userWindows = await _userWindowsRepo.Get();
+                    var windowId = userWindows
+                        .Where(w => w.UserId == operatorRequest.UserId)
+                        .Select(w => w.WindowId)
+                        .FirstOrDefault();
+                    var window = await _windowRepo.FindById(windowId);
+                    var windowName = window.Name;
+                    
+                    queueDto.Add(new QueueDto
+                    {
+                        Id = item.Id,
+                        Number = item.Number,
+                        CreationTime = item.CreationTime,
+                        TimeStart = item.TimeStart,
+                        TimeEnd = item.TimeEnd,
+                        StatusId = item.StatusId,
+                        Window = windowName,
+                        ServiceId = item.ServiceId
+                    });
+                }
+            }
+
             return Ok (queueDto);
         }
         catch (Exception ex)
         {
-            return Ok(new Response() { Status = "Ошибка", Message = $"Сервер выдал ошибку: {ex.Message}" });
+            return StatusCode(StatusCodes.Status500InternalServerError, new { Message = "An error occurred while processing your request.", Error = ex.Message });
         }
     }
 
@@ -150,14 +143,6 @@ public class QueueController : ControllerBase
         if (queue != null)
             ticketDigit = queue.Select(x => x.ServiceId == serviceId).Count() % 100;
 
-        var statuses = await _statusRepo.Get();
-        if (statuses is null)
-            return Ok(new Response { Status = "Ошибка", Message = "Cтатусы не найдены", });
-        
-        var waitingStatus = statuses.FirstOrDefault(s => s.Id == (int)Status.Waiting);
-        if (waitingStatus is null)
-            return Ok(new Response { Status = "Ошибка", Message = "Cтатус В ожидании не найден", });
-
         var queueItem = new DAL.Models.Queue
         {
             Id = new Guid(),
@@ -165,8 +150,8 @@ public class QueueController : ControllerBase
             CreationTime = DateTime.UtcNow,
             TimeStart = null,
             TimeEnd = null,
-            StatusId = waitingStatus.Id,
-            ServiceId = service.Id,
+            StatusId = (int)DAL.Enums.Status.Waiting,
+            ServiceId = serviceId,
             WindowId = null
         };
 
@@ -253,23 +238,19 @@ public class QueueController : ControllerBase
                                 && item.StatusId != (int)Status.Completed);
                     if (queueItem != null)
                     {
-                        queueItem.TimeStart = DateTime.UtcNow;
-                        queueItem.StatusId = (int)DAL.Enums.Status.Active;
-                        queueItem.WindowId = userActiveWindow?.FirstOrDefault()?.Id;
-
-                        await _queueRepo.Update(queueItem);
-                        var queueDto = new QueueDto
+                        queueItem = new DAL.Models.Queue
                         {
                             Id = queueItem.Id,
                             Number = queueItem.Number,
                             CreationTime = queueItem.CreationTime,
-                            TimeStart = queueItem.TimeStart,
-                            TimeEnd = queueItem.TimeEnd,
-                            StatusId = queueItem.StatusId,
+                            TimeStart = DateTime.UtcNow, // Time only push
+                            TimeEnd = null,
+                            StatusId = (int)DAL.Enums.Status.Active,
                             ServiceId = queueItem.ServiceId,
-                            Window = queueItem.Window?.Name
+                            WindowId = userActiveWindow?.FirstOrDefault()?.Id
                         };
-                        return Ok(queueDto);
+                        var updatedTicket = await _queueRepo.Update(queueItem);
+                        return Ok(updatedTicket);
                     }
                     return Ok(new Response { Status = "Ошибка", Message = "Нет подходящего статуса заявки" });
                 }
@@ -298,7 +279,7 @@ public class QueueController : ControllerBase
         }
         catch (Exception ex)
         {
-            return Ok(new Response() { Status = "Ошибка", Message = $"Сервер выдал ошибку: {ex.Message}" });
+            return StatusCode(500, $"Internal server error: {ex}");
         }
     }
     
@@ -324,7 +305,7 @@ public class QueueController : ControllerBase
         }
         catch (Exception ex)
         {
-            return Ok(new Response() { Status = "Ошибка", Message = $"Сервер выдал ошибку: {ex.Message}" });
+            return StatusCode(500, $"Internal server error: {ex}");
         }
     }
 }
