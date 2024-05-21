@@ -2,9 +2,10 @@ import React, { ChangeEvent, useState } from 'react'
 import { Container } from 'reactstrap'
 import Add from '../../public/Add.svg'
 import styles from './admin.module.css'
-import { Flex, Form, FormProps, Input } from 'antd'
+import { Flex } from 'antd'
 import Button from '../Button'
 import Multiselect from 'multiselect-react-dropdown';
+import axios from "axios";
 
 interface Queue {
     main: string;
@@ -15,6 +16,8 @@ function Admin() {
     const [user, setUser] = useState(false)
     const [login, setLogin] = useState('');
     const [password, setPassword] = useState('');
+    const [firstName, setFirstName] = useState('');
+    const [secondName, setSecondName] = useState('');
     const [role, setRole] = useState('');
     const [cabinet, setCabinet] = useState('');
     const [window, setWindow] = useState('');
@@ -40,14 +43,52 @@ function Admin() {
         }
     };
 
-    const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
+    const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
         event.preventDefault();
         if (!login || !password || !role || (role === 'operator' && (!cabinet || !window))) {
             setFormErrors({ login: !login ? 'Логин обязателен' : '', password: !password ? 'Пароль обязателен' : '', role: !role ? 'Роль обязательна' : '', cabinet: role === 'operator' && !cabinet ? 'Кабинет обязателен' : '', window: role === 'operator' && !window ? 'Окно обязательно' : '' });
-            return;
+            //return;
         }
         // Ваша логика отправки данных на сервер
         console.log({ login, password, role, cabinet, window, queues });
+
+        const requestBody = {
+            firstName,
+            secondName,
+            login,
+            password,
+            roleId: null,  // Не забудьте преобразовать роль в ID на сервере
+            windowId: null
+        };
+
+        try {
+            const response = await fetch('/api/user/add', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(requestBody)
+            });
+
+            const data = await response.json();
+
+            if (response.ok) {
+                alert('Пользователь успешно добавлен');
+                // Очистить форму
+                setLogin('');
+                setPassword('');
+                setRole('');
+                setFirstName('');
+                setSecondName('');
+                setWindow('');
+                setUser(false);
+            } else {
+                alert(`Ошибка: ${data.message}`);
+            }
+        } catch (error) {
+            console.error('Ошибка:', error);
+            alert('Произошла ошибка при добавлении пользователя');
+        }
     };
 
     function handleAddUser(): void {
@@ -67,6 +108,14 @@ function Admin() {
                 <img className={styles.image} src={Add} onClick={handleAddUser} width={60}></img>
                 {user && <form className={styles.addUserForm} onSubmit={handleSubmit}>
                     <Flex justify='space-between'>
+                        <div className={styles.formGroup}>
+                            <label>Имя:</label>
+                            <input type="text" value={firstName} onChange={(e) => setFirstName(e.target.value)} />
+                        </div>
+                        <div className={styles.formGroup}>
+                            <label>Фамилия:</label>
+                            <input type="text" value={secondName} onChange={(e) => setSecondName(e.target.value)} />
+                        </div>
                         <div className={styles.formGroup}>
                             <label>Логин:</label>
                             <input type="text" value={login} onChange={(e) => setLogin(e.target.value)} />
@@ -127,15 +176,11 @@ function Admin() {
                                     }
                                 }}
                             />
-
-
                         </div>
                     )}
                     <Button submit>Добавить пользователя</Button>
                 </form>}
-
             </Container>
-
         </Container>
     )
 }

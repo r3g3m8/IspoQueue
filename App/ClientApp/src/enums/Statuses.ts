@@ -1,8 +1,8 @@
 ﻿enum Statuses {
-    "В ожидании" = 1,
-    "Активен" = 2,
-    "Заврешен" = 3,
-    "Отложен" = 4,
+    "Waiting" = 1,
+    "Active" = 2,
+    "Completed" = 3,
+    "Defer" = 4,
 }
 
 export default Statuses;
