@@ -62,8 +62,7 @@ public class GenericRepo<TEntity> : IGenericRepo<TEntity> where TEntity : class
 
     public async Task<List<TEntity>?> Get()
     {
-        var l = await _dbSet.AsNoTracking().ToListAsync();
-
+        var l = await _dbSet.ToListAsync();
         return l;
     }
 
@@ -77,5 +76,11 @@ public class GenericRepo<TEntity> : IGenericRepo<TEntity> where TEntity : class
     {
         _context.Entry(item).State = EntityState.Modified;
         await _context.SaveChangesAsync();
+    }
+
+    public async Task Delete(TEntity item)
+    {
+         _dbSet.Remove(item);
+         await _context.SaveChangesAsync();
     }
 }

@@ -2,11 +2,11 @@ import React, { Component } from 'react';
 import { Route, Routes } from 'react-router-dom';
 import { Layout } from './components/Layout';
 import './styles.css';
-import Submition from './components/Queue/Submission/index.tsx';
-import Consultations from './components/Queue/Consultations/index.tsx';
-import Login from './components/Auth/Login.tsx';
-import Home from './components/Home.tsx';
-import {FetchData} from "./components/FetchData.tsx";
+import Submition from './components/Queue/Submission';
+import Consultations from './components/Queue/Consultations';
+import Login from './components/Auth/Login';
+import Home from './components/Home';
+import {FetchData} from "./components/FetchData";
 
 export default function App() {
   return (

@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react'
 import { Container, Table } from 'reactstrap'
 import styles from './display.module.css'
-import fetchQueue from '../../services/getQueue.ts';
+import fetchQueue from '../../services/fetchQueue';
 import axios from "axios";
 
 interface Queue {
@@ -15,13 +15,13 @@ interface Queue {
 }
 function Display() {
     const [queue, setQueue] = useState<Queue[]>([]);
+    const { getQueue } = fetchQueue();
 
     useEffect(() => {
         const fetchData = async () => {
             try {
-                const response = await axios.get('/api/queue'); // Замените '/queue' на путь к вашему контроллеру на бэкенде
-                console.log(response.data)
-                setQueue(response.data);
+                const response = await getQueue(); // Замените '/queue' на путь к вашему контроллеру на бэкенде
+                setQueue(response);
             } catch (error) {
                 console.error('Ошибка при загрузке очереди:', error);
             }
