@@ -23,6 +23,7 @@ namespace IspoQueue.App.Features.Queue
             _userWindowsRepo = userWindowsRepo;
         }
 
+        // todo Добвить ограничение только для админов
         [HttpGet]
         public async Task<ActionResult<IEnumerable<UserDTO>>> GetUser()
         {
@@ -43,8 +44,10 @@ namespace IspoQueue.App.Features.Queue
                     SecondName = user.SecondName,
                     Login = user.Login,
                     Password = user.PasswordHash,  // Обратите внимание, что реальный пароль не должен отправляться клиенту.
-                    Roles = user.UserRoles.Select(ur => ur.Role.Name).ToList(),
-                    Windows = user.UserWindows.Select(uw => new WindowDTO { Id = uw.Window.Id, Name = uw.Window.Name }).ToList()
+                    Roles = user.UserRoles.Select(ur =>new RoleDTO() {Id = ur.RoleId, Name = ur.Role.Name}).ToList(),
+                    Windows = user.UserWindows.Select(uw => new WindowDTO { Id = uw.Window.Id, Name = uw.Window.Name }).ToList(),
+                    Cabinet = user.UserWindows.Select(uw => 
+                        new CabinetDTO() { Id = uw.Window.CabinetId, Name = uw.Window.Cabinet.Name}).FirstOrDefault()
                 };
                 userDtos.Add(userDto);
             }
@@ -68,8 +71,8 @@ namespace IspoQueue.App.Features.Queue
                 FirstName = user.FirstName,
                 SecondName = user.SecondName,
                 Login = user.Login,
-                Password = "расхэшированный",  // Обратите внимание, что реальный пароль не должен отправляться клиенту.
-                Roles = user.UserRoles.Select(ur => ur.Role.Name).ToList(),
+                Password = null,  // Обратите внимание, что реальный пароль не должен отправляться клиенту.
+                Roles = user.UserRoles.Select(ur =>new RoleDTO() {Id = ur.RoleId, Name = ur.Role.Name}).ToList(),
                 Windows = user.UserWindows.Select(uw => new WindowDTO() { Id = uw.Window.Id, Name = uw.Window.Name }).ToList()
             };
 
@@ -77,23 +80,65 @@ namespace IspoQueue.App.Features.Queue
         }
 
         [HttpPut("{id}")]
-        public async Task<IActionResult> UpdateUser(Guid id, [FromBody] UpdateUserDto updateUserDto)
+        public async Task<IActionResult> UpdateUser(Guid id, [FromBody] UserDTO updateUserDto)
         {
-            var user = await _userRepo.FindById(id);
+            if (updateUserDto == null)
+                return Ok(new Response { Status = "Ошибка", Message = "Некорректные данные" });
 
+            var user = await _userRepo.FindById(id);
             if (user == null)
-            {
-                return NotFound();
-            }
+                return NotFound(new Response { Status = "Ошибка", Message = "Пользователь не найден" });
 
             user.FirstName = updateUserDto.FirstName;
             user.SecondName = updateUserDto.SecondName;
             user.Login = updateUserDto.Login;
-            user.PasswordHash = user.PasswordHash;
 
-            await _userRepo.Update(user);
+            try
+            {
+                // Обновление ролей пользователя
+                var existingRoles = user.UserRoles;
+                foreach (var existingRole in existingRoles)
+                {
+                    await _userRolesRepo.Delete(existingRole);
+                }
 
-            return Ok(new Response { Status = "Успех", Message = "Пользователь добавлен" });
+                foreach (var role in updateUserDto.Roles)
+                {
+                    var userRole = new UserToRole
+                    {
+                        Id = Guid.NewGuid(),
+                        UserId = user.Id,
+                        RoleId = role.Id
+                    };
+                    await _userRolesRepo.Create(userRole);
+                }
+
+                // Обновление окон пользователя
+                var existingWindows = user.UserWindows;
+                foreach (var existingWindow in existingWindows)
+                {
+                    await _userWindowsRepo.Delete(existingWindow);
+                }
+
+                foreach (var window in updateUserDto.Windows)
+                {
+                    var userWindow = new UserToWindow
+                    {
+                        Id = Guid.NewGuid(),
+                        UserId = user.Id,
+                        WindowId = window.Id
+                    };
+                    await _userWindowsRepo.Create(userWindow);
+                }
+                
+                await _userRepo.Update(user);
+                return Ok(new Response { Status = "Успех", Message = "Пользователь обновлен" });
+            }
+            catch (Exception ex)
+            {
+                return Ok(new Response
+                    { Status = "Ошибка", Message = $"Ошибка при изменении пользователя: {ex.Message}" });
+            }
         }
 
         [HttpDelete("{id}")]
@@ -112,7 +157,7 @@ namespace IspoQueue.App.Features.Queue
         }
 
         [HttpPost("/api/user/add")]
-        public async Task<ActionResult<Response>> AddUser([FromBody] AddUserRequest requestBody)
+        public async Task<ActionResult<Response>> AddUser([FromBody] UserDTO requestBody)
         {
             if (requestBody == null)
                 return BadRequest(new Response { Status = "Ошибка", Message = "Некорректные данные" });
@@ -123,40 +168,46 @@ namespace IspoQueue.App.Features.Queue
                 FirstName = requestBody.FirstName,
                 SecondName = requestBody.SecondName,
                 Login = requestBody.Login,
-                PasswordHash = HashPassword(requestBody.Password) // Хеширование пароля
+                PasswordHash = HashPassword(requestBody.Password)
             };
 
             try
             {
                 await _userRepo.Create(user);
 
-                if (requestBody.RoleId.HasValue)
+                foreach (var role in requestBody.Roles)
                 {
-                    var userRole = new UserToRole
+                    if (role.Id != Guid.Empty)
                     {
-                        Id = Guid.NewGuid(),
-                        UserId = user.Id,
-                        RoleId = requestBody.RoleId.Value
-                    };
-                    await _userRolesRepo.Create(userRole);
+                        var userRole = new UserToRole
+                        {
+                            Id = Guid.NewGuid(),
+                            UserId = user.Id,
+                            RoleId = role.Id
+                        };
+                        await _userRolesRepo.Create(userRole);
+                    }
                 }
-                
-                if (requestBody.WindowId.HasValue)
+
+                foreach (var window in requestBody.Windows)
                 {
-                    var userWindow = new UserToWindow
+                    if (window.Id != Guid.Empty)
                     {
-                        Id = Guid.NewGuid(),
-                        UserId = user.Id,
-                        WindowId = requestBody.WindowId.Value
-                    };
-                    await _userWindowsRepo.Create(userWindow);
+                        var userWindow = new UserToWindow
+                        {
+                            Id = Guid.NewGuid(),
+                            UserId = user.Id,
+                            WindowId = window.Id
+                        };
+                        await _userWindowsRepo.Create(userWindow);
+                    }
                 }
 
                 return Ok(new Response { Status = "Успех", Message = "Пользователь добавлен" });
             }
             catch (Exception ex)
             {
-                return StatusCode(500, new Response { Status = "Ошибка", Message = $"Ошибка при добавлении пользователя: {ex.Message}" });
+                return Ok(new Response { Status = "Ошибка", Message = $"Ошибка при добавлении пользователя: {ex.Message}" });
             }
         }
 
@@ -168,15 +219,5 @@ namespace IspoQueue.App.Features.Queue
                 return BitConverter.ToString(hashedBytes).Replace("-", "").ToLower();
             }
         }
-    }
-
-    public class AddUserRequest
-    {
-        public string FirstName { get; set; }
-        public string SecondName { get; set; }
-        public string Login { get; set; }
-        public string Password { get; set; }
-        public Guid? RoleId { get; set; }
-        public Guid? WindowId { get; set; }
     }
 }
