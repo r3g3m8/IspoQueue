@@ -22,7 +22,7 @@ function Home() {
 
   useEffect(() => {
     // Пример изменения роли на 'display' после монтирования компонента
-    setRole('operator');
+    setRole('admin');
   }, []);
 
   return (
