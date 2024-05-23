@@ -4,7 +4,7 @@ import NextImage from '../../public/Next.svg'
 import styles from '../Display/display.module.css'
 import axios from 'axios'
 import Button from "../Button";
-import {Flex} from "antd";
+import {Card, Flex, Tag} from "antd";
 import moment from "moment";
 import Statuses from 'src/enums/Statuses'
 import fetchQueue from "../../services/fetchQueue";
@@ -15,13 +15,13 @@ interface Queue {
     number: string | null;
     timeStart: Date | null;
     statusId: number;
-    serviceId: number;
+    serviceName: string;
 }
 function Operator() {
     const [isTimerActive, setIsTimerActive] = useState(false);
     const [next, setNext] = useState<Queue | null>(null);
     const [complete, setComplete] = useState(false);
-    const [remainingTime, setRemainingTime] = useState(10); // Время в секундах (2 минуты)
+    const [remainingTime, setRemainingTime] = useState(0); // Время в секундах (2 минуты)
     const userId = '01234567-89ab-cdef-0123-456789abcdef';
     const { deleteTicket } = fetchQueue();
 
@@ -113,12 +113,14 @@ function Operator() {
     const queueData = queue.length > 0 ? queue.map((q) => {
         return <tr key={q.id.toString()}>
             <td>{q.number}</td>
-            <td>{q.serviceId}</td>
+            <td>{q.serviceName}</td>
             <td className={q.statusId === Statuses.Completed ?
                 styles.completed : q.statusId === Statuses.Active ?
                     styles.active : styles.waiting}>{Statuses[q.statusId]}</td>
         </tr>
     }) : <></>
+
+   
     
     return (
         <Container>
@@ -132,13 +134,19 @@ function Operator() {
                 </Button> : <Button disabled>Осталось времени: {remainingTime}</Button>}
             </Container>
             {next && 
-                <Flex>
-                <p>{next?.number} </p><br/>
-                <div>
-                    <p>{moment(next?.timeStart).format('DD.mm.yyyy HH:mm')}</p>
-                </div>
-                <p> {Statuses[next.statusId || 0]}</p>
-            </Flex>}
+                <Card>
+                    <h5>Текущая заявка:</h5>
+                    <table className={styles.table}>
+                        <tbody>
+                            <tr>
+                                <td>{next?.number}</td>
+                                <td>{moment(next?.timeStart).format('DD.MM HH:mm')}</td>
+                                <td>{next.serviceName}</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </Card>
+                }
             
             <table className={styles.table}>
                     <thead>

@@ -1,3 +1,7 @@
+.image {
+  margin-left: 0.5rem;
+}
+
 .image:hover {
     cursor: pointer;
 }
@@ -34,6 +38,10 @@
   
   .formGroup select[multiple] {
     height: 100px;
+  }
+  
+  .textAdd {
+    margin: auto 0;
   }
 
   .chips { 

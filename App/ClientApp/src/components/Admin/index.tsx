@@ -2,16 +2,12 @@ import React, { ChangeEvent, useState, useEffect } from 'react'
 import { Container } from 'reactstrap'
 import Add from '../../public/Add.svg'
 import styles from './admin.module.css'
-import { Flex, Select } from 'antd'
-import Button from '../Button'
+import {Flex, Select, Tag} from 'antd'
+import MyButton from '../Button'
 import Multiselect from 'multiselect-react-dropdown';
 import axios, {AxiosError} from "axios";
-import {Guid} from "guid-typescript";
-
-interface Queue {
-    main: string;
-    name: string;
-}
+import {DataTable} from "primereact/datatable";
+import {Column} from "primereact/column";
 
 interface Role {
     id: string;
@@ -21,7 +17,7 @@ interface Role {
 interface Service {
     id: number;
     name: string;
-    queueName: string;
+    queueName: string | null;
 }
 
 interface User {
@@ -56,11 +52,11 @@ function Admin() {
     const [windows, setWindows] = useState<Window[]>([]);
     const [cabinets, setCabinets] = useState<Cabinet[]>([]);
     const [selectedCabinet, setSelectedCabinet] = useState<Cabinet | undefined>(undefined)
-    const [selectedQueues, setSelectedQueues] = useState<string[]>([]);
     const [roles, setRoles] = useState<Role[]>([]);
     const [services, setServices] = useState<Service[]>([]);
-    const [selectedRoles, setSelectedRoles] = useState<Role[]>([])
-    const [selectedWindows, setSelectedWindows] = useState<Window[]>([])
+    const [selectedServices, setSelectedServices] = useState<Service[]>([]);
+    const [selectedRoles, setSelectedRoles] = useState<Role[]>([]);
+    const [selectedWindows, setSelectedWindows] = useState<Window[]>([]);
     const [formErrors, setFormErrors] = useState<{ [key: string]: string }>({});
 
     useEffect(() => {
@@ -147,14 +143,20 @@ function Admin() {
 
     const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
         event.preventDefault();
-        if (!selectedUser?.id && !login || !password ) {
+        if (!login || !password || !selectedRoles) {
             setFormErrors({
                 login: !login ? 'Логин обязателен' : '',
                 password: !password ? 'Пароль обязателен' : '',
-                roles: roles.length === 0 ? 'Роль обязательна' : '',
-                //windows: roles.includes('operator') && windows.length === 0 ? 'Окно обязательно' : '',
-                //queues: roles.includes('operator') && queues.length === 0 ? 'Очередь обязательна' : ''
+                
             });
+            if(selectedUser && isOperatorSelected || selectedWindows || selectedCabinet) {
+                setFormErrors((prev) => ({
+                    ...prev,
+                    roles: selectedRoles.length === 0 ? 'Роль обязательна' : '',
+                    windows: isOperatorSelected && selectedWindows.length === 0 ? 'Окно обязательно' : '',
+                    cabinet: isOperatorSelected && selectedCabinet === undefined ? 'Кабинет обязателен' : '',
+                }))
+            }
             return;
         }
 
@@ -213,7 +215,8 @@ function Admin() {
                 alert(`Ошибка: ${response.statusText}`);
             }
         } catch (error) {
-            console.error('Ошибка при удалении пользователя:', error);
+            const err = error as AxiosError;
+            console.error('Ошибка при удалении пользователя:', err.response?.data);
             alert('Произошла ошибка при удалении пользователя');
         }
     };
@@ -227,7 +230,7 @@ function Admin() {
         setSelectedCabinet(undefined);
         setSelectedRoles([]);
         setSelectedWindows([]);
-        setSelectedQueues([]);
+        setSelectedServices([]);
         setUser(!user);
     };
 
@@ -238,14 +241,83 @@ function Admin() {
         if(!isOperatorSelected){
             setSelectedCabinet(undefined);
         }
+        const operatorRole = selectedRoles.some(role => role.name.includes('Оператор'));
+        if (operatorRole) 
+        {
+            if (selectedRoles.length > 0) {
+                const roleIds = selectedRoles.map(role => role.id);
+                const params = new URLSearchParams();
+                roleIds.forEach(id => params.append('roleId', id));
+
+                fetch(`/api/Data/servicesByRoles?${params.toString()}`)
+                    .then(response => response.json())
+                    .then(data => {
+                        setSelectedServices(data);
+                    })
+                    .catch(error => console.error('Error fetching services by roles:', error));
+            } else {
+                setSelectedServices([]);
+            }
+        }
     }, [selectedRoles])
 
+    const roleBodyTemplate = (rowData) => {
+        return rowData.roles.map(role => (
+            <Tag color='#319f42' key={role.id} style={
+                {fontSize: '14px',
+                    padding: '0.5rem',
+                    borderRadius: '15px'}
+            }>
+                {role.name}
+            </Tag>
+        ));
+    };
+    
+    const windowBodyTemplate = (rowData) => {
+        return rowData.windows.map(window => (
+            <Tag color='#319f42' key={window.id} style={
+                {fontSize: '14px',
+                    padding: '0.5rem',
+                    borderRadius: '15px'}
+            }>
+                {window.name}
+            </Tag>
+        ));
+    };
+
+    const editButtonTemplate = (rowData) => {
+        return (
+            <MyButton
+                outline
+                onClick={() => handleEditUser(rowData)}>
+                Изменить
+            </MyButton>
+        );
+    };
+
+    const deleteButtonTemplate = (rowData) => {
+        return (
+            <MyButton
+                onClick={() => handleDeleteUser(rowData.id)}
+                destructive>
+                Удалить
+            </MyButton>
+        );
+    };
+
     return (
-        <Container className='d-flex flex-column align-items-center justify-content-center'>
+        <Container>
             <h1>Панель управления</h1>
             <Container className='p-0'>
-                <h3>Управление операторами</h3>
-                <img className={styles.image} src={Add} onClick={handleAddUser} width={60}></img>
+                <h3>Управление пользователями</h3>
+                <MyButton outline={!user} destructive={user} onClick={handleAddUser}>
+                    {!user ? ( <Flex justify={"center"} align={"center"}>
+                            <p className={styles.textAdd}>Добавить пользователя</p>
+                            <img className={styles.image} src={Add} width={35}></img>
+                    </Flex>)
+                    : 'Закрыть форму'}
+                </MyButton>
+                
                 {user && <form className={styles.addUserForm} onSubmit={handleSubmit}>
                     <Flex justify='space-between'>
                         <div className={styles.formGroup}>
@@ -289,6 +361,7 @@ function Admin() {
                                 }
                             }}
                         />
+                        {formErrors.roles && <span className={styles.error}>{formErrors.roles}</span>}
                     </div>
                     {isOperatorSelected && (
                         <div className={styles.formGroup}>
@@ -332,44 +405,36 @@ function Admin() {
                                         }
                                     }}
                                 />
-                                {formErrors.window && <span className={styles.error}>{formErrors.window}</span>}
+                                {formErrors.windows && <span className={styles.error}>{formErrors.windows}</span>}
                             </div>
                             <label>Очереди:</label>
-                            <Multiselect
-                                options={services.map((service) => ({ main: service.queueName, name: service.name }))}
-                                groupBy="main"
-                                onSelect={(selectedList) => setSelectedQueues(selectedList.map((queue: Queue) => queue.name))}
-                                displayValue="name"
-                                placeholder='Выберите очередь'
-                                showCheckbox
-                                className={styles.multiSelectContainer}
-                                style={{
-                                    chips: {
-                                        background: '#319f42'
-                                    },
-                                    searchBox: {
-                                        border: 'none',
-                                        padding: '0'
-                                    }
-                                }}
-                            />
+                            {selectedServices.map(service => (
+                                <Tag color='#319f42' key={service.id} style={
+                                    {fontSize: '14px',
+                                    padding: '0.5rem',
+                                    borderRadius: '15px'}
+                                }>
+                                    {service.name}
+                                </Tag>
+                            ))}
                         </div>
                     )}
-                    <Button submit>{selectedUser ? 'Изменить пользоваетля' : 'Добавить пользователя'}</Button>
+                    <MyButton submit>{selectedUser ? 'Изменить пользоваетля' : 'Добавить пользователя'}</MyButton>
                 </form>}
             </Container>
 
             {users && <>
                 <h3>Список пользователей</h3>
-                <ul>
-                    {users.map(user => (
-                        <li key={user.id}>
-                            {user.firstName} {user.secondName} ({user.login}) {user.roles.map(roles => roles.name)}
-                            <button onClick={() => handleEditUser(user)}>Изменить</button>
-                            <button onClick={() => handleDeleteUser(user.id)}>Удалить</button>
-                        </li>
-                    ))}
-                </ul>            
+                <DataTable value={users} responsiveLayout="scroll">
+                    <Column field="firstName" header="Имя" body={(data) => `${data.firstName}`} sortable></Column>
+                    <Column field="secondName" header="Фамилия" body={(data) => `${data.secondName}`} sortable></Column>
+                    <Column field="login" header="Логин" body={(data) => `${data.login}`} sortable></Column>
+                    <Column field="roles" header="Роли" body={roleBodyTemplate} sortable></Column>
+                    <Column field="cabinet" header="Кабинет" body={(data) => data.cabinet ? `${data.cabinet.name}` : ''} sortable></Column>
+                    <Column field="windows" header="Окна" body={windowBodyTemplate} sortable></Column>
+                    <Column body={editButtonTemplate} header="Изменить"></Column>
+                    <Column body={deleteButtonTemplate} header="Удалить"></Column>
+                </DataTable>      
             </>}
             
         </Container>

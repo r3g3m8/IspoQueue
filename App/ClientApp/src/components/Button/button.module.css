@@ -37,21 +37,17 @@
 
 .outline {
     background: transparent;
-    color: var(--title);
-    border: var(--border-width) solid var(--border);
-}
-
-.outline:hover {
-    border: var(--border-width) solid var(--accent);
+    color: #319F42;
+    border: 2px solid  #319F42;
+    padding: 0.5rem 0.7rem;
+    width: fit-content;
 }
 
 .destructive {
-    background: var(--error);
-    color: white;
-}
-
-.destructive:hover {
     background-color: red;
+    color: white;
+    padding: 0.5rem 0.7rem;
+    width: fit-content;
 }
 
 .floating {
@@ -85,7 +81,7 @@
 }
 
 .disabled {
-    background: var(--border);
+    background: transparent;
     color: var(--placeholder);
     cursor: not-allowed;
 }
