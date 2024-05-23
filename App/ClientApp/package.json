@@ -13,6 +13,7 @@
     "moment": "^2.30.1",
     "multiselect-react-dropdown": "^2.0.25",
     "oidc-client": "^1.11.5",
+    "primereact": "^10.6.5",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-router-bootstrap": "^0.26.2",

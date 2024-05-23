@@ -9,5 +9,5 @@ public class QueueDto
     public string? ServiceName { get; set; }
     public int StatusId { get; set; }
     public string Window { get; set; }
-    public int? ServiceId { get; set; }
+    public string? Cabinet { get; set; }
 }

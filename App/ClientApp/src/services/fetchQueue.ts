@@ -13,6 +13,17 @@ export default function fetchQueue() {
         }
     }
 
+    const getActiveQueue = async  () => {
+        let res;
+        try {
+            res = await axios.get('/api/queue/active');
+            return res.data;
+        } catch (error) {
+            console.error('Error creating ticket:', error);
+            return error;
+        }
+    }
+
     const addTicket = async (serviceId: number) => {
         try {
             const response = await axios.post('/api/Queue', { serviceId });
@@ -42,6 +53,7 @@ export default function fetchQueue() {
     
     return {
         getQueue,
+        getActiveQueue,
         addTicket,
         deleteTicket,
         deferTicket

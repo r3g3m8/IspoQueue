@@ -45,8 +45,8 @@ public class QueueController : ControllerBase
 
             if (allQueue != null)
             {
-                //var queueItems = allQueue.Where(q => q.WindowId != null);
-                foreach (var item in allQueue)
+                var queueItems = allQueue.Where(q => q.WindowId == null);
+                foreach (var item in queueItems)
                 {
                     queueDto.Add(new QueueDto
                     {
@@ -54,11 +54,42 @@ public class QueueController : ControllerBase
                         Number = item.Number,
                         CreationTime = item.CreationTime,
                         TimeStart = item.TimeStart,
-                        TimeEnd = item.TimeEnd,
+                        ServiceName = item.Service.Name,
+                        StatusId = item.StatusId,
+                    });
+                }
+            }
+
+            return Ok(queueDto.OrderByDescending(q => q.TimeStart));
+        }
+        catch (Exception ex)
+        {
+            return Ok(new Response() { Status = "Ошибка", Message = $"Сервер выдал ошибку: {ex.Message}" });
+        }
+    }
+    
+    [HttpGet("active")]
+    public async Task<ActionResult<IEnumerable<QueueDto>>> GetActiveQueue()
+    {
+        try
+        {
+            var allQueue = await _queueRepo.Get();
+            List<QueueDto> queueDto = new List<QueueDto>();
+
+            if (allQueue != null)
+            {
+                var queueItems = allQueue.Where(q => q.StatusId == (int)Status.Active);
+                foreach (var item in queueItems)
+                {
+                    queueDto.Add(new QueueDto
+                    {
+                        Id = item.Id,
+                        Number = item.Number,
+                        TimeStart = item.TimeStart,
                         ServiceName = item.Service.Name,
                         StatusId = item.StatusId,
                         Window = item?.Window?.Name,
-                        ServiceId = item.ServiceId
+                        Cabinet = item?.Window?.Cabinet?.Name
                     });
                 }
             }
@@ -122,7 +153,7 @@ public class QueueController : ControllerBase
                         TimeEnd = item.TimeEnd,
                         StatusId = item.StatusId,
                         Window = windowName,
-                        ServiceId = item.ServiceId
+                        ServiceName = item.Service.Name
                     });
                 }
             }
@@ -267,7 +298,7 @@ public class QueueController : ControllerBase
                             TimeStart = queueItem.TimeStart,
                             TimeEnd = queueItem.TimeEnd,
                             StatusId = queueItem.StatusId,
-                            ServiceId = queueItem.ServiceId,
+                            ServiceName = queueItem.Service.Name,
                             Window = queueItem.Window?.Name
                         };
                         return Ok(queueDto);

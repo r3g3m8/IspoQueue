@@ -1,6 +1,7 @@
 ﻿using IspoQueue.App.Features.Queue.DTO;
 using IspoQueue.App.Repositories;
 using IspoQueue.DAL.Models;
+using IspoQueue.DAL.Models.MediateModel;
 using Microsoft.AspNetCore.Mvc;
 
 namespace IspoQueue.App.Features.Queue;
@@ -59,7 +60,31 @@ public class DataController : ControllerBase
         
         return Ok(serviceDtos);
     }
-    
+
+    [HttpGet("servicesByRoles")]
+    public async Task<ActionResult<IEnumerable<ServiceDTO>>> GetServicesByRoles([FromQuery] Guid?[] roleId)
+    {
+        var roles = await _roleRepo.FindByIds(roleId);
+        if (roles == null)
+            return Ok(new Response() { Status = "Ошибка", Message = "Роль не найдена" });
+
+        List<ServiceDTO> serviceDtos = new();
+        foreach (var role in roles)
+        {
+            var services = role.ServiceRoles.Select(sr => sr.Service);
+            foreach (var service in services)
+            {
+                var dtoService = new ServiceDTO()
+                {
+                    Id = service.Id,
+                    Name = service.Name
+                };
+                serviceDtos.Add(dtoService);
+            }
+        }
+        return Ok(serviceDtos);
+    }
+
     [HttpGet("cabinets")]
     public async Task<ActionResult<IEnumerable<CabinetDTO>>> GetCabinets()
     {
@@ -83,7 +108,7 @@ public class DataController : ControllerBase
     {
         Guid id = new Guid(cabinetId);
         var windows = await _windowRepo.Get();
-        var cabWindows = windows.Where(w => w.CabinetId == id);
+        var cabWindows = windows.Where(w => w.CabinetId == id).OrderBy(w => w.Name);
         List<WindowDTO> windowDtos = new();
         foreach (var window in cabWindows)
         {
