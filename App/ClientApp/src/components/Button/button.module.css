@@ -50,6 +50,14 @@
     width: fit-content;
 }
 
+.dashed {
+    background: transparent;
+    color: #319F42;
+    border: 2px dashed #319F42;
+    padding: 0.3rem 0.7rem;
+    width: fit-content;
+}
+
 .floating {
     padding: 1rem;
     border-radius: 50%;

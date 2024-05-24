@@ -1,7 +1,6 @@
 ﻿using IspoQueue.App.Features.Queue.DTO;
 using IspoQueue.App.Repositories;
 using IspoQueue.DAL.Models;
-using IspoQueue.DAL.Models.MediateModel;
 using Microsoft.AspNetCore.Mvc;
 
 namespace IspoQueue.App.Features.Queue;
@@ -10,18 +9,13 @@ namespace IspoQueue.App.Features.Queue;
 [Route("api/[controller]")]
 public class DataController : ControllerBase
 {
-    private readonly IGenericRepo<Role>  _roleRepo;
+    private readonly IGenericRepo<Role> _roleRepo;
     private readonly IGenericRepo<Service> _serviceRepo;
-    private readonly IGenericRepo<Cabinet> _cabinetRepo;
-    private readonly IGenericRepo<Window> _windowRepo;
 
-    public DataController(IGenericRepo<Role> roleRepo, IGenericRepo<Service> serviceRepo, 
-        IGenericRepo<Cabinet> cabinetRepo, IGenericRepo<Window> windowRepo)
+    public DataController(IGenericRepo<Role> roleRepo, IGenericRepo<Service> serviceRepo)
     {
         _roleRepo = roleRepo;
         _serviceRepo = serviceRepo;
-        _cabinetRepo = cabinetRepo;
-        _windowRepo = windowRepo;
     }
 
     [HttpGet("roles")]
@@ -83,44 +77,5 @@ public class DataController : ControllerBase
             }
         }
         return Ok(serviceDtos);
-    }
-
-    [HttpGet("cabinets")]
-    public async Task<ActionResult<IEnumerable<CabinetDTO>>> GetCabinets()
-    {
-        var cabinets = await _cabinetRepo.Get();
-        List<CabinetDTO> cabinetDtos = new();
-        foreach (var cabinet in cabinets)
-        {
-            var cabDto = new CabinetDTO()
-            {
-                Id = cabinet.Id,
-                Name = cabinet.Name,
-            };
-            cabinetDtos.Add(cabDto);
-        }
-        
-        return Ok(cabinetDtos);
-    }
-    
-    [HttpGet("cabinetWindows/{cabinetId}")]
-    public async Task<ActionResult<IEnumerable<WindowDTO>>> GetWindowsByCabinet(string cabinetId)
-    {
-        Guid id = new Guid(cabinetId);
-        var windows = await _windowRepo.Get();
-        var cabWindows = windows.Where(w => w.CabinetId == id).OrderBy(w => w.Name);
-        List<WindowDTO> windowDtos = new();
-        foreach (var window in cabWindows)
-        {
-            var winDto = new WindowDTO()
-            {
-                Id = window.Id,
-                Name = window.Name,
-                IsActive = window.IsActive
-            };
-            windowDtos.Add(winDto);
-        }
-        
-        return Ok(windowDtos);
     }
 }

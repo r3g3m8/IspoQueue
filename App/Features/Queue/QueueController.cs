@@ -12,7 +12,7 @@ namespace IspoQueue.App.Features.Queue;
 public class QueueController : ControllerBase
 {
     private readonly IGenericRepo<DAL.Models.Queue> _queueRepo;
-    private readonly IGenericRepo<DAL.Models.Service> _serviceRepo;
+    private readonly IGenericRepo<Service> _serviceRepo;
     private readonly IGenericRepo<UserToRole> _userRolesRepo;
     private readonly IGenericRepo<ServiceToRole> _roleServicesRepo;
     private readonly IGenericRepo<UserToWindow> _userWindowsRepo;

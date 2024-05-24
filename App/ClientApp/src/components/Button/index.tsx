@@ -9,7 +9,7 @@ type props = {
     outline?: boolean;
     expand?: boolean;
     link?: boolean;
-    ghost?: boolean;
+    dashed?: boolean;
     className?: string;
     destructive?: boolean;
     submit?: boolean;
@@ -32,8 +32,8 @@ export default function Button(props: props) {
         button_styles += " " + styles.link;
     }
 
-    if (props.ghost) {
-        button_styles += " " + styles.ghost;
+    if (props.dashed) {
+        button_styles += " " + styles.dashed;
     }
 
     if (props.destructive) {
