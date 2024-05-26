@@ -8,6 +8,7 @@ import Multiselect from 'multiselect-react-dropdown';
 import axios, {AxiosError} from "axios";
 import {DataTable} from "primereact/datatable";
 import {Column} from "primereact/column";
+import CabAndWindows from "./CabAndWindows";
 
 interface Role {
     id: string;
@@ -27,18 +28,20 @@ interface User {
     login: string;
     password: string;
     roles: { id: string, name: string }[];
-    windows: { id: string, name: string }[];
-    cabinet: { id: string, name: string };
+    windows: Window[];
+    cabinet: Cabinet;
 }
 
 interface Cabinet {
     id: string
     name: string
+    windows: Window[] | undefined;
 }
 
 interface Window {
     id: string;
     name: string;
+    isActive: boolean;
 }
 
 function Admin() {
@@ -96,7 +99,7 @@ function Admin() {
 
     const fetchCabinets = async () => {
         try {
-            const response = await axios.get('/api/Data/cabinets');
+            const response = await axios.get('/api/Cabinet');
             console.log(response.data);
             setCabinets(response.data);
         } catch (error) {
@@ -115,7 +118,7 @@ function Admin() {
 
     const fetchWindowsByCabinet = async (cabinetId: string) => {
         try {
-            const response = await fetch(`/api/Data/cabinetWindows/${cabinetId}`)
+            const response = await fetch(`/api/Window/cabinetWindows/${cabinetId}`)
             if (!response.ok) {
                 throw new Error(`Ошибка: ${response.statusText}`)
             }
@@ -132,7 +135,7 @@ function Admin() {
 
     const handleCabinetChange = async (value: string) => {
         console.log(value);
-        setSelectedCabinet({id: value, name: ""})
+        setSelectedCabinet({id: value, name: "", windows: []})
         setSelectedWindows([]);
         await fetchWindowsByCabinet(value)
     }
@@ -436,7 +439,7 @@ function Admin() {
                     <Column body={deleteButtonTemplate} header="Удалить"></Column>
                 </DataTable>      
             </>}
-            
+            <CabAndWindows/>
         </Container>
     )
 }

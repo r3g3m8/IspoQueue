@@ -1,8 +1,8 @@
-﻿namespace IspoQueue.App.Features.Queue.DTO;
+﻿using IspoQueue.App.Features.Queue.DTO;
 
 public class UserDTO
 {
-    public Guid? Id { get; set; }
+    public Guid Id { get; set; }
     public string? FirstName { get; set; }
     public string? SecondName { get; set; }
     public string Login { get; set; }

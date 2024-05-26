@@ -5,8 +5,8 @@
 }
 
 .logo {
-  max-height: 100%;
-  max-width: 255px;
+  height: 100%;
+  width: 255px;
 }
 
 html {
