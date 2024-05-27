@@ -6,6 +6,11 @@ namespace IspoQueue.DAL;
 
 public class AppDbContext : DbContext
 {
+
+    public AppDbContext()
+    {
+       Database.EnsureCreated();
+    }
     public AppDbContext(DbContextOptions<AppDbContext> options) : base(options)
     {
         // Database.EnsureDeleted();
@@ -18,7 +23,7 @@ public class AppDbContext : DbContext
         base.OnConfiguring(optionsBuilder);
         if (!optionsBuilder.IsConfigured)
         {
-            optionsBuilder.UseLazyLoadingProxies().UseNpgsql("UserID=postgres;Password=123qweQWE;Server=localhost;Port=6699;Database=IspoQueue;");
+            optionsBuilder.UseLazyLoadingProxies().UseNpgsql("UserID=postgres;Password=example;Server=db;Port=5432;Database=IspoQueue;");
         }
     }
 
