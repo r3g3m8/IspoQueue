@@ -37,6 +37,9 @@ builder.Services.AddScoped<IGenericRepo<Cabinet>, GenericRepo<Cabinet>>();
 
 var app = builder.Build();
 
+
+var context = new AppDbContext();
+
 // Configure the HTTP request pipeline.
 if (!app.Environment.IsDevelopment())
 {
