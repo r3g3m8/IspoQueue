@@ -9,7 +9,7 @@ import {jwtDecode} from "jwt-decode";
 import {message} from "antd";
 import User from "../interfaces/User";
 
-type Role = 'Дисплей' | 'Администратор' | 'Опертаор' | 'Терминал' | null;
+type Role = 'Дисплей' | 'Администратор' | 'Оператор' | 'Терминал' | null;
 
 interface JwtPayload {
     primarysid: string,
@@ -53,7 +53,7 @@ function Home() {
                     console.log(decoded);
                     
                     if (decoded.role.includes('Оператор')) {
-                        setRole('Опертаор');
+                        setRole('Оператор');
                     } else if (decoded.role === 'Администратор') {
                         setRole('Администратор');
                     } else if (decoded.role === 'Дисплей') {
@@ -79,7 +79,7 @@ function Home() {
                   <Admin />
               ) : role === 'Дисплей' ? (
                   <Display />
-              ) : role === 'Опертаор' ? (
+              ) : role === 'Оператор' ? (
                   <Operator user={user}/>
               ) : (
                   <Queue />
