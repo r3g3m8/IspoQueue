@@ -20,23 +20,31 @@ public class CabinetController : ControllerBase
     [HttpGet]
     public async Task<ActionResult<IEnumerable<CabinetDTO>>> GetCabinets()
     {
-        var cabinets = await _cabinetRepo.Get();
-        List<CabinetDTO> cabinetDtos = new();
-        foreach (var cabinet in cabinets)
+        try
         {
-            var cabDto = new CabinetDTO()
+            var cabinets = await _cabinetRepo.Get();
+            List<CabinetDTO> cabinetDtos = new();
+            foreach (var cabinet in cabinets)
             {
-                Id = cabinet.Id,
-                Name = cabinet.Name,
-                Windows = cabinet.Windows
-                    .Select(w =>new WindowDTO() {Id = w.Id, Name = w.Name, IsActive = w.IsActive})
-                    .OrderBy(w => w.Name)
-                    .ToList(),
-            };
-            cabinetDtos.Add(cabDto);
+                var cabDto = new CabinetDTO()
+                {
+                    Id = cabinet.Id,
+                    Name = cabinet.Name,
+                    Windows = cabinet.Windows
+                        .Select(w => new WindowDTO() { Id = w.Id, Name = w.Name, IsActive = w.IsActive })
+                        .OrderBy(w => w.Name)
+                        .ToList(),
+                };
+                cabinetDtos.Add(cabDto);
+            }
+
+            return Ok(cabinetDtos);
         }
-        
-        return Ok(cabinetDtos);
+        catch (Exception ex)
+        {
+            return StatusCode(500,
+                new Response() { Status = "Ошибка", Message = $"Сервер выдал ошибку: {ex.Message}" });
+        }
     }
     
     [HttpPost]
@@ -49,7 +57,7 @@ public class CabinetController : ControllerBase
         
             if (uniqueCab.Count() > 0)
             {
-                return Ok(new Response { Status = "Ошибка", Message = "Кабинет уже существует", });
+                return BadRequest(new Response { Status = "Ошибка", Message = "Кабинет уже существует", });
             }
 
             var cabinet = new Cabinet
@@ -63,7 +71,7 @@ public class CabinetController : ControllerBase
         }
         catch (Exception ex)
         {
-            return Ok(new Response { Status = "Ошибка", Message = $"Кабинет не создан. Error: {ex}" });
+            return StatusCode(500, new Response { Status = "Ошибка", Message = $"Кабинет не создан. Error: {ex}" });
         }
     }
     
@@ -74,13 +82,13 @@ public class CabinetController : ControllerBase
         {
             if (cabinetDto == null || id == Guid.Empty)
             {
-                return Ok(new Response { Status = "Ошибка", Message = "Данные не валидны", });
+                return BadRequest(new Response { Status = "Ошибка", Message = "Данные не валидны", });
             }
 
             var cabinet = await _cabinetRepo.FindById(id);
             if (cabinet == null)
             {
-                return Ok(new Response { Status = "Ошибка", Message = "Кабинет не найден", });
+                return NotFound(new Response { Status = "Ошибка", Message = "Кабинет не найден", });
             }
 
             cabinet.Name = cabinetDto.Name;
@@ -90,7 +98,7 @@ public class CabinetController : ControllerBase
         }
         catch (Exception ex)
         {
-            return Ok(new Response { Status = "Ошибка", Message = $"Кабинет не изменен. Error: {ex}" });
+            return StatusCode(500, new Response { Status = "Ошибка", Message = $"Кабинет не изменен. Error: {ex}" });
         }
     }
     
@@ -102,7 +110,7 @@ public class CabinetController : ControllerBase
             var cabinet = await _cabinetRepo.FindById(id);
             if (cabinet == null)
             {
-                return Ok(new Response { Status = "Ошибка", Message = "Кабинет не найден", });
+                return NotFound(new Response { Status = "Ошибка", Message = "Кабинет не найден", });
             }
 
             _cabinetRepo.Remove(cabinet);
@@ -110,7 +118,7 @@ public class CabinetController : ControllerBase
         }
         catch (Exception ex)
         {
-            return Ok(new Response { Status = "Ошибка", Message = $"Кабинет не удален. Error: {ex}" });
+            return StatusCode(500, new Response { Status = "Ошибка", Message = $"Кабинет не удален. Error: {ex}" });
         }
     }
 }

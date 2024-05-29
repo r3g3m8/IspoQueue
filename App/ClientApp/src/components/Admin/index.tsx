@@ -2,7 +2,7 @@ import React, { ChangeEvent, useState, useEffect } from 'react'
 import { Container } from 'reactstrap'
 import Add from '../../public/Add.svg'
 import styles from './admin.module.css'
-import {Flex, Select, Tag} from 'antd'
+import {Flex, message, notification, Select, Tag} from 'antd'
 import MyButton from '../Button'
 import Multiselect from 'multiselect-react-dropdown';
 import axios, {AxiosError} from "axios";
@@ -38,11 +38,7 @@ interface Cabinet {
     windows: Window[] | undefined;
 }
 
-interface Window {
-    id: string;
-    name: string;
-    isActive: boolean;
-}
+
 
 function Admin() {
     const [user, setUser] = useState(false)
@@ -61,6 +57,17 @@ function Admin() {
     const [selectedRoles, setSelectedRoles] = useState<Role[]>([]);
     const [selectedWindows, setSelectedWindows] = useState<Window[]>([]);
     const [formErrors, setFormErrors] = useState<{ [key: string]: string }>({});
+
+    const showError = (errorMessage: string) => {
+        notification.error({
+            message: 'Ошибка',
+            description: errorMessage,
+            className: 'custom-notification',
+            style: {
+                marginTop: '20vh', // Позиционирование сверху
+            },
+        });
+    };
 
     useEffect(() => {
         fetchUsers();
@@ -82,8 +89,13 @@ function Admin() {
             const response = await axios.get('/api/user');
             console.log(response.data);
             setUsers(response.data);
-        } catch (error) {
-            console.error('Ошибка при получении пользователей:', error);
+        } catch (err) {
+            const error = err as AxiosError<{ message?: string; status?: string }>;
+            if (error.response && error.response.data) {
+                showError(`Произошла ошбика при получени пользователей: ${error.response.data?.message}`);
+            } else {
+                showError('Возникла непредвиденная ошибка при получении пользователей. Попробуйте снова!');
+            }
         }
     };
 
@@ -92,8 +104,13 @@ function Admin() {
             const response = await axios.get('/api/Data/roles');
             console.log(response.data);
             setRoles(response.data);
-        } catch (error) {
-            console.error('Ошибка при получении ролей:', error);
+        } catch (err) {
+            const error = err as AxiosError<{ message?: string; status?: string }>;
+            if (error.response && error.response.data) {
+                showError(`Произошла ошбика при получени ролей: ${error.response.data?.message}`);
+            } else {
+                showError('Возникла непредвиденная ошибка при получении ролей. Попробуйте снова!');
+            }
         }
     };
 
@@ -102,8 +119,14 @@ function Admin() {
             const response = await axios.get('/api/Cabinet');
             console.log(response.data);
             setCabinets(response.data);
-        } catch (error) {
-            console.error('Ошибка при получении пользователей:', error);
+        } catch (err) {
+            const error = err as AxiosError<{ message?: string; status?: string }>;
+            if (error.response && error.response.data) {
+                showError(`Произошла ошбика при получени кабинетов: ${error.response.data?.message}`);
+            } else {
+                showError('Возникла непредвиденная ошибка при получении кабинетов. Попробуйте добавить кабинет!');
+            }
+
         }
     };
 
@@ -111,21 +134,28 @@ function Admin() {
         try {
             const response = await axios.get('/api/Data/services');
             setServices(response.data);
-        } catch (error) {
-            console.error('Ошибка при получении услуг:', error);
+        } catch (err) {
+            const error = err as AxiosError<{ message?: string; status?: string }>;
+            if (error.response && error.response.data) {
+                showError(`Произошла ошбика при получени услуг: ${error.response.data?.message}`);
+            } else {
+                showError('Возникла непредвиденная ошибка при получении услуг. Попробуйте снова!');
+            }
         }
     };
 
     const fetchWindowsByCabinet = async (cabinetId: string) => {
         try {
             const response = await fetch(`/api/Window/cabinetWindows/${cabinetId}`)
-            if (!response.ok) {
-                throw new Error(`Ошибка: ${response.statusText}`)
-            }
             const data = await response.json()
             setWindows(data)
-        } catch (error) {
-            console.error('Ошибка при получении окон:', error)
+        } catch (err) {
+            const error = err as AxiosError<{ message?: string; status?: string }>;
+            if (error.response && error.response.data) {
+                showError(`Произошла ошбика при получени окон: ${error.response.data?.message}`);
+            } else {
+                showError('Возникла непредвиденная ошибка при получении окон. Попробуйте добавить окна к кабинету!');
+            }
         }
     }
 
@@ -188,12 +218,15 @@ function Admin() {
                 setUser(false);
                 fetchUsers();
             } else {
-                alert(`Ошибка: ${response.statusText}`);
+                showError('Возникла непредвиденная ошибка при удалении пользователя. Попробуйте снова!');
             }
-        } catch (error) {
-            const err = error as AxiosError;
-            console.error('Ошибка:', err.response?.data);
-            alert('Произошла ошибка при добавлении/обновлении пользователя');
+        } catch (err) {
+            const error = err as AxiosError<{ message?: string; status?: string }>;
+            if (error.response && error.response.data) {
+                showError(`Произошла ошбика при добавлении пользователя: ${error.response.data?.message}`);
+            } else {
+                showError('Возникла непредвиденная ошибка при добавлении пользователя. Попробуйте снова!');
+            }
         }
     };
 
@@ -217,10 +250,13 @@ function Admin() {
             } else {
                 alert(`Ошибка: ${response.statusText}`);
             }
-        } catch (error) {
-            const err = error as AxiosError;
-            console.error('Ошибка при удалении пользователя:', err.response?.data);
-            alert('Произошла ошибка при удалении пользователя');
+        } catch (err) {
+            const error = err as AxiosError<{ message?: string; status?: string }>;
+            if (error.response && error.response.data) {
+                showError(`Произошла ошбика при удалении пользователя: ${error.response.data?.message}`);
+            } else {
+                showError('Возникла непредвиденная ошибка при удалении пользователя. Попробуйте снова!');
+            }
         }
     };
 
@@ -429,8 +465,8 @@ function Admin() {
             {users && <>
                 <h3>Список пользователей</h3>
                 <DataTable value={users} responsiveLayout="scroll">
-                    <Column field="firstName" header="Имя" body={(data) => `${data.firstName}`} sortable></Column>
-                    <Column field="secondName" header="Фамилия" body={(data) => `${data.secondName}`} sortable></Column>
+                    <Column field="firstName" header="Имя" body={(data) => data.firstName ? `${data.firstName}` : ''} sortable></Column>
+                    <Column field="secondName" header="Фамилия" body={(data) => data.secondName ? `${data.secondName}` : ''} sortable></Column>
                     <Column field="login" header="Логин" body={(data) => `${data.login}`} sortable></Column>
                     <Column field="roles" header="Роли" body={roleBodyTemplate} sortable></Column>
                     <Column field="cabinet" header="Кабинет" body={(data) => data.cabinet ? `${data.cabinet.name}` : ''} sortable></Column>

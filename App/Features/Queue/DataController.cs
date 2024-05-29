@@ -21,61 +21,83 @@ public class DataController : ControllerBase
     [HttpGet("roles")]
     public async Task<ActionResult<IEnumerable<RoleDTO>>> GetRoles()
     {
-        var allRoles = await _roleRepo.Get();
-        List<RoleDTO> roleDtos = new();
-        foreach (var role in allRoles)
+        try
         {
-            var roleDto = new RoleDTO()
+            var allRoles = await _roleRepo.Get();
+            List<RoleDTO> roleDtos = new();
+            foreach (var role in allRoles)
             {
-                Id = role.Id,
-                Name = role.Name
-            };
-            roleDtos.Add(roleDto);
-        }
+                var roleDto = new RoleDTO()
+                {
+                    Id = role.Id,
+                    Name = role.Name
+                };
+                roleDtos.Add(roleDto);
+            }
         
-        return Ok(roleDtos);
+            return Ok(roleDtos);
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, new Response() { Status = "Ошибка", Message = $"Сервер выдал ошибку: {ex.Message}" });
+        }
     }
 
     [HttpGet("services")]
     public async Task<ActionResult<IEnumerable<ServiceDTO>>> GetServices()
     {
-        var services = await _serviceRepo.Get();
-        List<ServiceDTO> serviceDtos = new();
-        foreach (var service in services)
+        try
         {
-            var servDto = new ServiceDTO()
+            var services = await _serviceRepo.Get();
+            List<ServiceDTO> serviceDtos = new();
+            foreach (var service in services)
             {
-                Id = service.Id,
-                Name = service.Name,
-                QueueName = service.QueueName
-            };
-            serviceDtos.Add(servDto);
-        }
+                var servDto = new ServiceDTO()
+                {
+                    Id = service.Id,
+                    Name = service.Name,
+                    QueueName = service.QueueName
+                };
+                serviceDtos.Add(servDto);
+            }
         
-        return Ok(serviceDtos);
+            return Ok(serviceDtos);
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, new Response() { Status = "Ошибка", Message = $"Сервер выдал ошибку: {ex.Message}" });
+        }
     }
 
     [HttpGet("servicesByRoles")]
     public async Task<ActionResult<IEnumerable<ServiceDTO>>> GetServicesByRoles([FromQuery] Guid?[] roleId)
     {
-        var roles = await _roleRepo.FindByIds(roleId);
-        if (roles == null)
-            return Ok(new Response() { Status = "Ошибка", Message = "Роль не найдена" });
-
-        List<ServiceDTO> serviceDtos = new();
-        foreach (var role in roles)
+        try
         {
-            var services = role.ServiceRoles.Select(sr => sr.Service);
-            foreach (var service in services)
+            var roles = await _roleRepo.FindByIds(roleId);
+            if (roles == null)
+                return BadRequest(new Response() { Status = "Ошибка", Message = "Роль не найдена" });
+
+            List<ServiceDTO> serviceDtos = new();
+            foreach (var role in roles)
             {
-                var dtoService = new ServiceDTO()
+                var services = role.ServiceRoles.Select(sr => sr.Service);
+                foreach (var service in services)
                 {
-                    Id = service.Id,
-                    Name = service.Name
-                };
-                serviceDtos.Add(dtoService);
+                    var dtoService = new ServiceDTO()
+                    {
+                        Id = service.Id,
+                        Name = service.Name
+                    };
+                    serviceDtos.Add(dtoService);
+                }
             }
+            return Ok(serviceDtos);
         }
-        return Ok(serviceDtos);
+        catch (Exception ex)
+        {
+            return StatusCode(500, new Response() { Status = "Ошибка", Message = $"Сервер выдал ошибку: {ex.Message}" });
+        }
+        
     }
 }

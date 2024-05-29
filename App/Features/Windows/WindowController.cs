@@ -21,22 +21,31 @@ public class WindowController : ControllerBase
     [HttpGet("cabinetWindows/{cabinetId}")]
     public async Task<ActionResult<IEnumerable<WindowDTO>>> GetWindowsByCabinet(string cabinetId)
     {
-        Guid id = new Guid(cabinetId);
-        var windows = await _windowRepo.Get();
-        var cabWindows = windows.Where(w => w.CabinetId == id).OrderBy(w => w.Name);
-        List<WindowDTO> windowDtos = new();
-        foreach (var window in cabWindows)
+        try
         {
-            var winDto = new WindowDTO()
+            Guid id = new Guid(cabinetId);
+            var windows = await _windowRepo.Get();
+            if(windows is null)
+                return Ok(new Response { Status = "Ошибка", Message = "Окна не найдены", });
+            var cabWindows = windows.Where(w => w.CabinetId == id).OrderBy(w => w.Name);
+            List<WindowDTO> windowDtos = new();
+            foreach (var window in cabWindows)
             {
-                Id = window.Id,
-                Name = window.Name,
-                IsActive = window.IsActive
-            };
-            windowDtos.Add(winDto);
-        }
+                var winDto = new WindowDTO()
+                {
+                    Id = window.Id,
+                    Name = window.Name,
+                    IsActive = window.IsActive
+                };
+                windowDtos.Add(winDto);
+            }
         
-        return Ok(windowDtos);
+            return Ok(windowDtos);
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500,new Response { Status = "Ошибка", Message = $"Окно не добавлено. Error: {ex}" });
+        }
     }
     
     [HttpPost("{cabinetId}")]
@@ -116,16 +125,14 @@ public class WindowController : ControllerBase
         {
             var window = await _windowRepo.FindById(id);
             if (window == null)
-            {
-                return Ok(new Response { Status = "Ошибка", Message = "Окно не найдено", });
-            }
+                return NotFound(new Response { Status = "Ошибка", Message = "Окно не найдено", });
 
             _windowRepo.Remove(window);
             return Ok(new Response { Status = "Успех", Message = "Окно удалено", });
         }
         catch (Exception ex)
         {
-            return Ok(new Response { Status = "Ошибка", Message = $"Окно не удалено. Error: {ex}" });
+            return StatusCode(500, new Response { Status = "Ошибка", Message = $"Окно не удалено. Error: {ex}" });
         }
     }
 }
