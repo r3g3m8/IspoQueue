@@ -2,13 +2,14 @@ import React, { useEffect, useState } from 'react'
 import { Container } from 'reactstrap'
 import NextImage from '../../public/Next.svg'
 import styles from '../Display/display.module.css'
-import axios from 'axios'
+import axios, {AxiosError} from 'axios'
 import Button from "../Button";
-import {Card, Flex, Tag} from "antd";
+import {Card, message, notification} from "antd";
 import moment from "moment";
 import Statuses from 'src/enums/Statuses'
 import fetchQueue from "../../services/fetchQueue";
 import {Guid} from "guid-typescript";
+import User from 'src/interfaces/User'
 
 interface Queue {
     id: Guid;
@@ -17,30 +18,84 @@ interface Queue {
     statusId: number;
     serviceName: string;
 }
-function Operator() {
+
+type props = {
+    user: User | null;
+}
+interface Service {
+    id: number;
+    name: string;
+}
+
+function Operator(props: props) {
     const [isTimerActive, setIsTimerActive] = useState(false);
     const [next, setNext] = useState<Queue | null>(null);
     const [complete, setComplete] = useState(false);
     const [remainingTime, setRemainingTime] = useState(0); // Время в секундах (2 минуты)
-    const userId = '01234567-89ab-cdef-0123-456789abcdef';
-    const { deleteTicket } = fetchQueue();
-
+    const { deleteTicket, deferTicket } = fetchQueue();
+    const [services, setServices] = useState<Service[]>([]);
     const [queue, setQueue] = useState<Queue[]>([]);
+
+    const showError = (errorMessage: string) => {
+        notification.error({
+            message: 'Ошибка',
+            description: errorMessage,
+            className: 'custom-notification',
+            style: {
+                marginTop: '20vh', // Позиционирование сверху
+            },
+        });
+    };
 
     const fetchData = async () => {
         try {
             const response = await axios.get(`/api/queue/get`, {
                 params: {
-                    UserId: userId,
-                }}); // Замените '/queue' на путь к вашему контроллеру на бэкенде
+                    UserId: props.user?.id,
+                }});
             setQueue(response.data);
-        } catch (error) {
-            console.error('Ошибка при загрузке очереди:', error);
+        } catch (err) {
+            const error = err as AxiosError<{ message?: string; status?: string }>;
+            console.log(error?.response);
+            if (error.response && error.response.data) {
+                message.error(`${error.response.data?.message}`);
+            } else {
+                message.error('Возникла непредвиденная ошибка при получении очереди оператора. Попробуйте снова!');
+            }
+        }
+    };
+
+    const fetchServices = async () => {
+        try {
+            if (props.user == null)
+                return;
+            console.log(props.user);
+            const roleIds = props.user.roles.map(role => role.id);
+            const params = new URLSearchParams();
+            roleIds.forEach(id => params.append('roleId', id));
+            fetch(`/api/Data/servicesByRoles?${params.toString()}`)
+                .then(response => response.json())
+                .then(data => {
+                    setServices(data);
+                })
+                .catch(error => console.error('Error fetching services by roles:', error));
+        } catch (err) {
+            const error = err as AxiosError<{ message?: string; status?: string }>;
+            if (error.response && error.response.data) {
+                showError(`${error.response.data?.message}`);
+            } else {
+                showError('Возникла непредвиденная ошибка при получении очереди оператора. Попробуйте снова!');
+            }
         }
     };
 
     useEffect(() => {
+        
+        console.log(props.user)
+        if(props.user == null)
+            return;
         fetchData();
+        fetchServices()
     }, []);
 
     useEffect(() => {
@@ -78,7 +133,7 @@ function Operator() {
         return () => clearInterval(timerInterval);
     }, [isTimerActive, remainingTime]);
 
-    async function handleNext(userId: string): Promise<void> {
+    async function handleNext(userId: string | null): Promise<void> {
         try {
             const response = await axios.put('/api/Queue', {userId})
             console.log(response.data);
@@ -87,8 +142,13 @@ function Operator() {
             setNext(response.data);
             setComplete(true);
             await fetchData();
-        } catch (error) {
-            console.error('Ошибка при загрузке очереди:', error);
+        } catch (err) {
+            const error = err as AxiosError<{ message?: string; status?: string }>;
+            if (error.response && error.response.data) {
+                showError(`${error.response.data?.message}`);
+            } else {
+                showError('Возникла непредвиденная ошибка при получении новой заявки. Попробуйте снова!');
+            }
         }
     }
 
@@ -103,7 +163,7 @@ function Operator() {
     };
     const handleDefer = async () => {
         if (next != null) {
-            const response = await axios.put(`/api/queue/defer/${next.id}`);
+            await deferTicket(next.id);
             setNext(null);
             setComplete(false);
             await fetchData();
@@ -126,10 +186,14 @@ function Operator() {
         <Container>
             <h1>Вы оператор, который работает с очередью:</h1>
             <ul>
-                <li>{"Констультации"}</li>
+                {services.map((s) => {
+                    return <>
+                        <li key={s.id}>{s.name}</li>
+                    </>
+                })}
             </ul>
             <Container className='w-50 m-0 p-0'>
-                {!isTimerActive && !complete ? <Button onClick={() => handleNext(userId)} next>
+                {!isTimerActive && !complete ? <Button onClick={() => handleNext(props.user!.id)} next>
                     Следующий <img src={NextImage} width={35} className='mx-2'></img>
                 </Button> : <Button disabled>Осталось времени: {remainingTime}</Button>}
             </Container>

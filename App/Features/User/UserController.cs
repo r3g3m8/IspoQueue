@@ -2,6 +2,7 @@
 using System.Text;
 using IspoQueue.App.Features.Queue.DTO;
 using IspoQueue.App.Repositories;
+using IspoQueue.DAL.Helpers;
 using IspoQueue.DAL.Models;
 using IspoQueue.DAL.Models.MediateModel;
 using Microsoft.AspNetCore.Mvc;
@@ -16,7 +17,8 @@ namespace IspoQueue.App.Features.Queue
         private readonly IGenericRepo<UserToRole> _userRolesRepo;
         private readonly IGenericRepo<UserToWindow> _userWindowsRepo;
 
-        public UserController(IGenericRepo<User> userRepo, IGenericRepo<UserToRole> userRolesRepo, IGenericRepo<UserToWindow> userWindowsRepo)
+        public UserController(IGenericRepo<User> userRepo, IGenericRepo<UserToRole> userRolesRepo,
+            IGenericRepo<UserToWindow> userWindowsRepo)
         {
             _userRepo = userRepo;
             _userRolesRepo = userRolesRepo;
@@ -43,40 +45,56 @@ namespace IspoQueue.App.Features.Queue
                     FirstName = user.FirstName,
                     SecondName = user.SecondName,
                     Login = user.Login,
-                    Password = user.PasswordHash,  // Обратите внимание, что реальный пароль не должен отправляться клиенту.
-                    Roles = user.UserRoles.Select(ur =>new RoleDTO() {Id = ur.RoleId, Name = ur.Role.Name}).ToList(),
-                    Windows = user.UserWindows.Select(uw => new WindowDTO { Id = uw.Window.Id, Name = uw.Window.Name }).ToList(),
-                    Cabinet = user.UserWindows.Select(uw => 
-                        new CabinetDTO() { Id = uw.Window.CabinetId, Name = uw.Window.Cabinet.Name}).FirstOrDefault()
+                    Password = user
+                        .PasswordHash, // Обратите внимание, что реальный пароль не должен отправляться клиенту.
+                    Roles = user.UserRoles.Select(ur => new RoleDTO() { Id = ur.RoleId, Name = ur.Role.Name }).ToList(),
+                    Windows = user.UserWindows.Select(uw => new WindowDTO { Id = uw.Window.Id, Name = uw.Window.Name })
+                        .ToList(),
+                    Cabinet = user.UserWindows.Select(uw =>
+                        new CabinetDTO() { Id = uw.Window.CabinetId, Name = uw.Window.Cabinet.Name }).FirstOrDefault()
                 };
                 userDtos.Add(userDto);
             }
-            
+
             return Ok(userDtos);
         }
-        
+
         [HttpGet("{id}")]
-        public async Task<ActionResult<UserDTO>> GetUserById(Guid id)
+        public async Task<ActionResult<UserDTO>> GetUserById(string id)
         {
-            var user = await _userRepo.FindById(id);
-
-            if (user == null)
+            try
             {
-                return NotFound();
+                if (string.IsNullOrEmpty(id))
+                    return BadRequest(new Response() { Status = "Ошибка", Message = "Пользователь не найден" });
+                    
+                Guid userId = new Guid(id);
+                var user = await _userRepo.FindById(userId);
+
+                if (user == null)
+                    return BadRequest(new Response() { Status = "Ошибка", Message = "Пользователь не найден" });
+
+                var userDto = new UserDTO
+                {
+                    Id = user.Id,
+                    FirstName = user.FirstName,
+                    SecondName = user.SecondName,
+                    Login = user.Login,
+                    Password = null, // Обратите внимание, что реальный пароль не должен отправляться клиенту.
+                    Roles = user.UserRoles.Select(ur => new RoleDTO() { Id = ur.RoleId, Name = ur.Role.Name }).ToList(),
+                    Windows = user.UserWindows.Select(uw => new WindowDTO() { Id = uw.Window.Id, Name = uw.Window.Name })
+                        .ToList(),
+                    Cabinet = user.UserWindows.Select(uw =>
+                        new CabinetDTO() { Id = uw.Window.CabinetId, Name = uw.Window.Cabinet.Name }).FirstOrDefault()
+                };
+
+                return Ok(userDto);
             }
-
-            var userDto = new UserDTO
+            catch (Exception ex)
             {
-                Id = user.Id,
-                FirstName = user.FirstName,
-                SecondName = user.SecondName,
-                Login = user.Login,
-                Password = null,  // Обратите внимание, что реальный пароль не должен отправляться клиенту.
-                Roles = user.UserRoles.Select(ur =>new RoleDTO() {Id = ur.RoleId, Name = ur.Role.Name}).ToList(),
-                Windows = user.UserWindows.Select(uw => new WindowDTO() { Id = uw.Window.Id, Name = uw.Window.Name }).ToList()
-            };
-
-            return Ok(userDto);
+                Console.WriteLine(ex);
+                throw;
+            }
+            
         }
 
         [HttpPut("{id}")]
@@ -130,7 +148,7 @@ namespace IspoQueue.App.Features.Queue
                     };
                     await _userWindowsRepo.Create(userWindow);
                 }
-                
+
                 await _userRepo.Update(user);
                 return Ok(new Response { Status = "Успех", Message = "Пользователь обновлен" });
             }
@@ -161,14 +179,14 @@ namespace IspoQueue.App.Features.Queue
         {
             if (requestBody == null)
                 return BadRequest(new Response { Status = "Ошибка", Message = "Некорректные данные" });
-            
+
             var user = new User
             {
                 Id = Guid.NewGuid(),
                 FirstName = requestBody.FirstName,
                 SecondName = requestBody.SecondName,
                 Login = requestBody.Login,
-                PasswordHash = HashPassword(requestBody.Password)
+                PasswordHash = HashPasswordHelper.HashPassowrd(requestBody.Password)
             };
 
             try
@@ -207,16 +225,8 @@ namespace IspoQueue.App.Features.Queue
             }
             catch (Exception ex)
             {
-                return Ok(new Response { Status = "Ошибка", Message = $"Ошибка при добавлении пользователя: {ex.Message}" });
-            }
-        }
-
-        private string HashPassword(string password)
-        {
-            using (var sha256 = SHA256.Create())
-            {
-                var hashedBytes = sha256.ComputeHash(Encoding.UTF8.GetBytes(password));
-                return BitConverter.ToString(hashedBytes).Replace("-", "").ToLower();
+                return Ok(new Response
+                    { Status = "Ошибка", Message = $"Ошибка при добавлении пользователя: {ex.Message}" });
             }
         }
     }

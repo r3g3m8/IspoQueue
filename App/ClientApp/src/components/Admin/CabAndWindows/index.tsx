@@ -32,7 +32,6 @@ const CabinetsAndWindows = () => {
     const fetchCabinets = async () => {
         try {
             const response = await axios.get('/api/Cabinet');
-            console.log(response.data);
             setCabinets(response.data);
         } catch (error) {
             console.error('Ошибка при получении пользователей:', error);
@@ -59,8 +58,14 @@ const CabinetsAndWindows = () => {
             await axios.delete(`/api/cabinet/${cabinetId}`);
             message.success('Кабинет удален успешно');
             await fetchCabinets();
-        } catch (error) {
-            console.error('Ошибка при удалении кабинета:', error);
+            window.location.href = "/";
+        } catch (err) {
+            const error = err as AxiosError<{ message?: string; status?: string }>;
+            if (error.response && error.response.data) {
+                message.error(`Ошибка при удалении кабинета: ${error.response.data?.message}`);
+            } else {
+                message.error('Возникла непредвиденная ошибка при удалении кабинета. Попробуйте снова!');
+            }
         }
     };
 
@@ -84,8 +89,14 @@ const CabinetsAndWindows = () => {
             await axios.delete(`/api/window/${windowId}`);
             message.success('Окно удалено успешно');
             await fetchCabinets();
-        } catch (error) {
-            console.error('Ошибка при удалении окна:', error);
+            window.location.reload();
+        } catch (err) {
+            const error = err as AxiosError<{ message?: string; status?: string }>;
+            if (error.response && error.response.data) {
+                message.error(`Ошибка при удалении окна: ${error.response.data?.message}`);
+            } else {
+                message.error('Возникла непредвиденная ошибка при удалении окна');
+            }
         }
     };
 
@@ -114,15 +125,14 @@ const CabinetsAndWindows = () => {
             }
             await fetchCabinets();
             setIsModalVisible(false);
+            window.location.reload();
         } catch (err) {
             const error = err as AxiosError<{ message?: string; status?: string }>;
-            console.log(error.response);
             if (error.response && error.response.data) {
-                message.error(`${error.response.data?.message}`);
+                message.error(`Произошла ошбика при добавлении или изменении кабинетов и окон: ${error.response.data?.message}`);
             } else {
-                message.error('An error occurred while adding the cabinet.');
+                message.error('Возникла непредвиденная ошибка при удалении окна. Попробуйте снова!');
             }
-            console.error('Ошибка при сохранении данных:', error);
         }
     };
 
