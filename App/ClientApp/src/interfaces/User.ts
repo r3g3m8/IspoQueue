@@ -8,6 +8,6 @@ export default interface User {
     login: string;
     password: string | null;
     roles: { id: string, name: string }[] | [];
-    windows: Windows[] | null;
+    windows: Windows[] | undefined;
     cabinet: Cabinet | null;
 }

@@ -92,4 +92,5 @@
     background: transparent;
     color: var(--placeholder);
     cursor: not-allowed;
+    padding: 0;
 }

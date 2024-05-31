@@ -48,7 +48,7 @@ namespace IspoQueue.App.Features.Queue
                     Password = user
                         .PasswordHash, // Обратите внимание, что реальный пароль не должен отправляться клиенту.
                     Roles = user.UserRoles.Select(ur => new RoleDTO() { Id = ur.RoleId, Name = ur.Role.Name }).ToList(),
-                    Windows = user.UserWindows.Select(uw => new WindowDTO { Id = uw.Window.Id, Name = uw.Window.Name })
+                    Windows = user.UserWindows.Select(uw => new WindowDTO { Id = uw.Window.Id, Name = uw.Window.Name, IsActive = uw.Window.IsActive})
                         .ToList(),
                     Cabinet = user.UserWindows.Select(uw =>
                         new CabinetDTO() { Id = uw.Window.CabinetId, Name = uw.Window.Cabinet.Name }).FirstOrDefault()
@@ -81,7 +81,7 @@ namespace IspoQueue.App.Features.Queue
                     Login = user.Login,
                     Password = null, // Обратите внимание, что реальный пароль не должен отправляться клиенту.
                     Roles = user.UserRoles.Select(ur => new RoleDTO() { Id = ur.RoleId, Name = ur.Role.Name }).ToList(),
-                    Windows = user.UserWindows.Select(uw => new WindowDTO() { Id = uw.Window.Id, Name = uw.Window.Name })
+                    Windows = user.UserWindows.Select(uw => new WindowDTO() { Id = uw.Window.Id, Name = uw.Window.Name, IsActive = uw.Window.IsActive})
                         .ToList(),
                     Cabinet = user.UserWindows.Select(uw =>
                         new CabinetDTO() { Id = uw.Window.CabinetId, Name = uw.Window.Cabinet.Name }).FirstOrDefault()
@@ -166,7 +166,7 @@ namespace IspoQueue.App.Features.Queue
 
             if (user == null)
             {
-                return NotFound();
+                return BadRequest(new Response { Status = "Ошибка", Message = "Пользователь не найден. Обновите страницу для удаления" });
             }
 
             await _userRepo.Delete(user);
@@ -175,7 +175,7 @@ namespace IspoQueue.App.Features.Queue
         }
 
         [HttpPost("/api/user/add")]
-        public async Task<ActionResult<Response>> AddUser([FromBody] UserDTO requestBody)
+        public async Task<ActionResult> AddUser([FromBody] UserDTO requestBody)
         {
             if (requestBody == null)
                 return BadRequest(new Response { Status = "Ошибка", Message = "Некорректные данные" });
@@ -220,7 +220,7 @@ namespace IspoQueue.App.Features.Queue
                         await _userWindowsRepo.Create(userWindow);
                     }
                 }
-
+                
                 return Ok(new Response { Status = "Успех", Message = "Пользователь добавлен" });
             }
             catch (Exception ex)

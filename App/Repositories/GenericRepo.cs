@@ -22,9 +22,7 @@ public class GenericRepo<TEntity> : IGenericRepo<TEntity> where TEntity : class
 
     public async Task<TEntity?> FindById(Guid id)
     {
-        var layers = await Get();
         var e = await _dbSet.FindAsync(id);
-
         return e;
     }
 
@@ -68,7 +66,7 @@ public class GenericRepo<TEntity> : IGenericRepo<TEntity> where TEntity : class
 
     public async Task Remove(TEntity item)
     {
-        _dbSet.Remove(item);
+        _context.Entry(item).State = EntityState.Deleted;
         await _context.SaveChangesAsync();
     }
 

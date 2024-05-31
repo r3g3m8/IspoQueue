@@ -45,7 +45,7 @@ function Admin() {
     const [users, setUsers] = useState<User[]>([]);
     const [selectedUser, setSelectedUser] = useState<User | null>(null);
     const [login, setLogin] = useState('');
-    const [password, setPassword] = useState('');
+    const [password, setPassword] = useState<string>('');
     const [firstName, setFirstName] = useState('');
     const [secondName, setSecondName] = useState('');
     const [windows, setWindows] = useState<Window[]>([]);
@@ -176,16 +176,20 @@ function Admin() {
 
     const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
         event.preventDefault();
-        if (!login || !password || !selectedRoles) {
+        if (!login || !selectedRoles) {
             setFormErrors({
                 login: !login ? 'Логин обязателен' : '',
-                password: !password ? 'Пароль обязателен' : '',
-                
+                roles: selectedRoles.length === 0 ? 'Роль обязательна' : '',
             });
+            if(!selectedUser)
+                setFormErrors((prev) => ({
+                    ...prev,
+                    password: !password ? 'Пароль обязателен' : '',
+                }))
             if(selectedUser && isOperatorSelected || selectedWindows || selectedCabinet) {
                 setFormErrors((prev) => ({
                     ...prev,
-                    roles: selectedRoles.length === 0 ? 'Роль обязательна' : '',
+                    password: !password ? 'Пароль обязателен' : '',
                     windows: isOperatorSelected && selectedWindows.length === 0 ? 'Окно обязательно' : '',
                     cabinet: isOperatorSelected && selectedCabinet === undefined ? 'Кабинет обязателен' : '',
                 }))
@@ -216,7 +220,7 @@ function Admin() {
                 setFirstName('');
                 setSecondName('');
                 setUser(false);
-                fetchUsers();
+                await fetchUsers();
             } else {
                 showError('Возникла непредвиденная ошибка при удалении пользователя. Попробуйте снова!');
             }
@@ -244,16 +248,16 @@ function Admin() {
     const handleDeleteUser = async (id: string) => {
         try {
             const response = await axios.delete(`/api/user/${id}`);
-            if (response.status === 204) {
-                alert('Пользователь успешно удален');
+            if (response.status === 204 || response.status == 200) {
+                message.success('Пользователь успешно удален');
                 fetchUsers();
             } else {
-                alert(`Ошибка: ${response.statusText}`);
+                showError(`Перезагрузите страницу`);
             }
         } catch (err) {
             const error = err as AxiosError<{ message?: string; status?: string }>;
             if (error.response && error.response.data) {
-                showError(`Произошла ошбика при удалении пользователя: ${error.response.data?.message}`);
+                showError(`${error.response.data?.message}`);
             } else {
                 showError('Возникла непредвиденная ошибка при удалении пользователя. Попробуйте снова!');
             }
@@ -373,8 +377,8 @@ function Admin() {
                             {formErrors.login && <span className={styles.error}>{formErrors.login}</span>}
                         </div>
                         <div className={styles.formGroup}>
-                            <label>Пароль:</label>
-                            <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} />
+                            <label>{selectedUser ? "Нельзя изменить пароль" : "Пароль:"}</label>
+                            <input type="password" disabled={!!selectedUser} value={password} onChange={(e) => setPassword(e.target.value)} />
                             {formErrors.password && <span className={styles.error}>{formErrors.password}</span>}
                         </div>
                         

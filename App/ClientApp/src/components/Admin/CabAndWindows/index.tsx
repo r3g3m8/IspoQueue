@@ -1,5 +1,5 @@
 ﻿import React, { useState, useEffect } from 'react';
-import {Card, Button, Modal, Form, Input, List, Space, message, Flex, Row, Col} from 'antd';
+import {Card, Button, Modal, Form, Input, List, Space, message, Flex, Row, Col, Switch, ConfigProvider} from 'antd';
 import { EditOutlined, DeleteOutlined } from '@ant-design/icons';
 import axios, {AxiosError} from 'axios';
 import MyButton from '../../Button'
@@ -23,6 +23,7 @@ const CabinetsAndWindows = () => {
     const [selectedWindow, setSelectedWindow] = useState<Window | null>(null);
     const [isModalVisible, setIsModalVisible] = useState(false);
     const [isEditing, setIsEditing] = useState(false);
+    const [isWindow, setIsWindow] = useState(false);
     const [form] = Form.useForm();
     
     useEffect(() => {
@@ -39,6 +40,7 @@ const CabinetsAndWindows = () => {
     };
 
     const handleAddCabinet = () => {
+        setIsWindow(false);
         setIsEditing(false);
         setSelectedCabinet(null);
         form.resetFields();
@@ -46,6 +48,7 @@ const CabinetsAndWindows = () => {
     };
 
     const handleEditCabinet = (cabinet) => {
+        setIsWindow(false);
         setIsEditing(true);
         setSelectedWindow(null);
         setSelectedCabinet(cabinet);
@@ -74,6 +77,7 @@ const CabinetsAndWindows = () => {
         setSelectedCabinet(cabinet);
         form.resetFields();
         setIsModalVisible(true);
+        setIsWindow(true);
     };
 
     const handleEditWindow = (window) => {
@@ -82,6 +86,7 @@ const CabinetsAndWindows = () => {
         setSelectedWindow(window);
         form.setFieldsValue(window);
         setIsModalVisible(true);
+        setIsWindow(true);
     };
 
     const handleDeleteWindow = async (windowId) => {
@@ -103,6 +108,10 @@ const CabinetsAndWindows = () => {
     const handleOk = async () => {
         try {
             const values = form.getFieldsValue();
+            if(!values.name){
+                message.error(`Не введен номер окна`);
+                return;
+            }
             if (isEditing) {
                 console.log(values);
                 console.log(selectedWindow);
@@ -125,7 +134,7 @@ const CabinetsAndWindows = () => {
             }
             await fetchCabinets();
             setIsModalVisible(false);
-            window.location.reload();
+            //window.location.reload();
         } catch (err) {
             const error = err as AxiosError<{ message?: string; status?: string }>;
             if (error.response && error.response.data) {
@@ -144,6 +153,16 @@ const CabinetsAndWindows = () => {
 
     return (
         <div>
+            <ConfigProvider
+                theme={{
+                    token: {
+                        // Seed Token
+                        colorPrimaryHover: '29757F',
+                        colorPrimary: '#00b96b',
+                        borderRadius: 2,
+                    },
+                }}
+            >
             <h1>Управление кабинетами и окнами</h1>
             <MyButton outline onClick={handleAddCabinet}>
                 <Flex justify={"center"} align={"center"}>
@@ -151,59 +170,82 @@ const CabinetsAndWindows = () => {
                     <img className={styles.image} src={Add} width={35} alt={'add'}></img>
                 </Flex>
             </MyButton>
-            <Row gutter={[16, 16]}>
-                {cabinets.map((cabinet) => (
-                    <Col key={cabinet.id} span={6}>
-                        <Card
-                            title={cabinet.name}
-                            style={ { border: '1px solid #319F42'}  }
-                            styles={ {body: {padding: '0.5rem 24px'}}}
-                            extra={
-                                <Space>
-                                    <Button icon={<EditOutlined />} onClick={() => handleEditCabinet(cabinet)} />
-                                    <Button icon={<DeleteOutlined />} onClick={() => handleDeleteCabinet(cabinet.id)} />
-                                </Space>
-                            }
+                <ConfigProvider
+                    theme={{
+                        token: {
+                            // Seed Token
+                            colorBorder: '#29757F',
+                            colorPrimary: '#29757F',
+                            borderRadius: 2,
+                        },
+                    }}
+                >
+                    <Row gutter={[16, 16]}>
+                        {cabinets.map((cabinet) => (
+                            <Col key={cabinet.id} span={6}>
+                                <Card
+                                    title={cabinet.name}
+                                    style={ { border: '1px solid #319F42'}  }
+                                    styles={ {body: {padding: '0.5rem 24px'}}}
+                                    extra={
+                                        <Space>
+                                            <Button icon={<EditOutlined style={{ color: '#29757F' }}/>} onClick={() => handleEditCabinet(cabinet)} />
+                                            <Button icon={<DeleteOutlined />} danger onClick={() => handleDeleteCabinet(cabinet.id)} />
+                                        </Space>
+                                    }
+                                >
+                                    <List
+                                        dataSource={cabinet.windows}
+                                        renderItem={(window) => (
+                                            <List.Item
+                                                actions={[
+                                                    <Button icon={<EditOutlined style={{ color: '#29757F' }}/>} onClick={() => handleEditWindow(window)} />,
+                                                    <Button icon={<DeleteOutlined />} danger onClick={() => handleDeleteWindow(window.id)} />
+                                                ]}
+                                            >
+                                                {window.name}
+                                            </List.Item>
+                                        )}
+                                    />
+                                    <MyButton dashed onClick={() => handleAddWindow(cabinet)}>
+                                        <Flex justify={"center"} align={"center"}>
+                                            <p className={styles.textAdd}>Добавить окно</p>
+                                            <img className={styles.image} src={Add} width={30} alt={'add'}></img>
+                                        </Flex>
+                                    </MyButton>
+                                </Card>
+                            </Col>
+                        ))}
+                    </Row>
+                </ConfigProvider>
+           
+            
+                <Modal
+                    title={isEditing ? 'Редактировать' : 'Добавить'}
+                    open={isModalVisible}
+                    onOk={handleOk}
+                    onCancel={handleCancel}
+                >
+                    <Form form={form} layout="vertical">
+                        <Form.Item
+                            name="name"
+                            label="Название"
+                            rules={[{ required: true, message: 'Пожалуйста, введите название' }]}
                         >
-                            <List
-                                dataSource={cabinet.windows}
-                                renderItem={(window) => (
-                                    <List.Item
-                                        actions={[
-                                            <Button icon={<EditOutlined />} onClick={() => handleEditWindow(window)} />,
-                                            <Button icon={<DeleteOutlined />} onClick={() => handleDeleteWindow(window.id)} />
-                                        ]}
-                                    >
-                                        {window.name}
-                                    </List.Item>
-                                )}
-                            />
-                            <MyButton dashed onClick={() => handleAddWindow(cabinet)}>
-                                <Flex justify={"center"} align={"center"}>
-                                    <p className={styles.textAdd}>Добавить окно</p>
-                                    <img className={styles.image} src={Add} width={30} alt={'add'}></img>
-                                </Flex>
-                            </MyButton>
-                        </Card>
-                    </Col>
-                ))}
-            </Row>
-            <Modal
-                title={isEditing ? 'Редактировать' : 'Добавить'}
-                open={isModalVisible}
-                onOk={handleOk}
-                onCancel={handleCancel}
-            >
-                <Form form={form} layout="vertical">
-                    <Form.Item
-                        name="name"
-                        label="Название"
-                        rules={[{ required: true, message: 'Пожалуйста, введите название' }]}
-                    >
-                        <Input />
-                    </Form.Item>
-                </Form>
-            </Modal>
+                            <Input />
+                        </Form.Item>
+                        {isWindow && <Form.Item
+                            name="isActive"
+                            label="Активность"
+                            valuePropName="checked"
+                        >
+                            <Switch />
+                        </Form.Item>}
+
+                    </Form>
+                </Modal>
+            </ConfigProvider>
+            
         </div>
     );
 };

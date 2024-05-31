@@ -134,14 +134,12 @@ public class QueueController : ControllerBase
                     .Take(5);
                 foreach (var item in lastQueue)
                 {
-                    // есть флаг у окна IsActive его нужно использовать в фильтрации
                     var userWindows = user.UserWindows;
                     var window = userWindows
                         .Select(w => w.Window)
                         .Where(w => w.IsActive);
                     if(window == null || !window.Any())
                         return BadRequest(new Response() { Message = "У оператора нет активных окон", Status = "Ошибка" });
-                    var windowName = window.FirstOrDefault()?.Name;
 
                     queueDto.Add(new QueueDto
                     {
@@ -151,7 +149,7 @@ public class QueueController : ControllerBase
                         TimeStart = item.TimeStart,
                         TimeEnd = item.TimeEnd,
                         StatusId = item.StatusId,
-                        Window = windowName,
+                        Window = item.Window?.Name,
                         ServiceName = item.Service.Name
                     });
                 }
@@ -204,7 +202,7 @@ public class QueueController : ControllerBase
         try
         {
             await _queueRepo.Create(queueItem);
-            return Ok(new Response { Status = "Успех", Message = "Заявка создана", });
+            return Ok(new QueueDto() {Number = queueItem.Number, ServiceName = service.Name});
         }
         catch (Exception ex)
         {
@@ -222,30 +220,14 @@ public class QueueController : ControllerBase
 
             var userId = accept.UserId;
             var usersWindows = await _userWindowsRepo.Get();
-            var userWindows = usersWindows?.Where(window => window.UserId == userId).Select(window => window.Id);
+            var operatorActiveWindow = usersWindows?
+                .Where(uw => uw.UserId == userId)
+                .FirstOrDefault(uw => uw.Window.IsActive)
+                .WindowId;
 
-            if (userWindows == null)
+            if (operatorActiveWindow == null)
             {
-                return BadRequest(new Response { Status = "Ошибка", Message = "У оператора нет окон." });
-            }
-
-            //Get active user windows
-            var windows = await _windowRepo.Get();
-
-            List<Window?> userActiveWindow = new List<Window?>();
-            if (windows == null)
-            {
-                return BadRequest(new Response { Status = "Ошибка", Message = "Нет окон." });
-            }
-
-            foreach (var window in windows)
-            {
-                userActiveWindow.Add(windows.SingleOrDefault(x => x.Id == window.Id && x.IsActive));
-            }
-
-            if (userActiveWindow.Count == 0)
-            {
-                return BadRequest(new Response { Status = "Ошибка", Message = "Все окна оператора отключены." });
+                return BadRequest(new Response { Status = "Ошибка", Message = "У оператора нет активных окон." });
             }
 
             //Get user roles
@@ -286,7 +268,7 @@ public class QueueController : ControllerBase
                     {
                         queueItem.TimeStart = DateTime.UtcNow;
                         queueItem.StatusId = (int)DAL.Enums.Status.Active;
-                        queueItem.WindowId = userActiveWindow?.FirstOrDefault()?.Id;
+                        queueItem.WindowId = operatorActiveWindow;
 
                         await _queueRepo.Update(queueItem);
                         var queueDto = new QueueDto
@@ -302,8 +284,8 @@ public class QueueController : ControllerBase
                         };
                         return Ok(queueDto);
                     }
-                    return BadRequest(new Response { Status = "Ошибка", Message = "Нет подходящего статуса заявки" });
                 }
+                return BadRequest(new Response { Status = "Ошибка", Message = "Нет подходящего статуса заявки" });
             }
             return BadRequest(new Response { Status = "Ошибка", Message = "У оператора нет ролей" });
         }
