@@ -113,9 +113,6 @@ const CabinetsAndWindows = () => {
                 return;
             }
             if (isEditing) {
-                console.log(values);
-                console.log(selectedWindow);
-                console.log(selectedCabinet);
                 if (selectedCabinet) {
                     await axios.put(`/api/cabinet/${selectedCabinet.id}`, values);
                     message.success('Кабинет обновлен успешно');
@@ -134,7 +131,6 @@ const CabinetsAndWindows = () => {
             }
             await fetchCabinets();
             setIsModalVisible(false);
-            //window.location.reload();
         } catch (err) {
             const error = err as AxiosError<{ message?: string; status?: string }>;
             if (error.response && error.response.data) {

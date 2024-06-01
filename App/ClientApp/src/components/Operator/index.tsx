@@ -203,7 +203,7 @@ function Operator(props: props) {
                     <Container className='w-50 m-0 p-0'>
                         {!complete ? <Button onClick={() => handleNext(props.user!.id)} next>
                             Следующий <img src={NextImage} width={35} className='mx-2'></img>
-                        </Button> : <Button disabled>Чтобы вызвать следующего абитуриента - отожите или завершите текущщую заявку</Button>}
+                        </Button> : <Button disabled>Чтобы вызвать следующего абитуриента - отожите или завершите текущую заявку</Button>}
                     </Container>
                 </Flex>
                 
