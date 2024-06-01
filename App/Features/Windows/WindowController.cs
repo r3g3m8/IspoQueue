@@ -1,6 +1,7 @@
 ﻿using IspoQueue.App.Features.Queue;
 using IspoQueue.App.Repositories;
 using IspoQueue.DAL.Models;
+using IspoQueue.DAL.Models.MediateModel;
 using Microsoft.AspNetCore.Mvc;
 
 namespace IspoQueue.App.Features.Windows;
@@ -10,12 +11,14 @@ namespace IspoQueue.App.Features.Windows;
 public class WindowController : ControllerBase
 {
     private readonly IGenericRepo<Window> _windowRepo;
+    private readonly IGenericRepo<UserToWindow> _userToWindowRepo;
     private readonly IGenericRepo<Cabinet> _cabinetRepo;
 
-    public WindowController(IGenericRepo<Window> windowRepo, IGenericRepo<Cabinet> cabinetRepo)
+    public WindowController(IGenericRepo<Window> windowRepo, IGenericRepo<Cabinet> cabinetRepo, IGenericRepo<UserToWindow> userToWindowRepo)
     {
         _windowRepo = windowRepo;
         _cabinetRepo = cabinetRepo;
+        _userToWindowRepo = userToWindowRepo;
     }
 
     [HttpGet("cabinetWindows/{cabinetId}")]
@@ -29,15 +32,20 @@ public class WindowController : ControllerBase
                 return Ok(new Response { Status = "Ошибка", Message = "Окна не найдены", });
             var cabWindows = windows.Where(w => w.CabinetId == id).OrderBy(w => w.Name);
             List<WindowDTO> windowDtos = new();
+            var userToWindow = await _userToWindowRepo.Get();
             foreach (var window in cabWindows)
             {
-                var winDto = new WindowDTO()
+                var occupied = userToWindow.FirstOrDefault(uw => uw.WindowId == window.Id);
+                if(occupied == null)
                 {
-                    Id = window.Id,
-                    Name = window.Name,
-                    IsActive = window.IsActive
-                };
-                windowDtos.Add(winDto);
+                    var winDto = new WindowDTO()
+                    {
+                        Id = window.Id,
+                        Name = window.Name,
+                        IsActive = window.IsActive
+                    };
+                    windowDtos.Add(winDto);
+                }
             }
         
             return Ok(windowDtos);
@@ -90,23 +98,16 @@ public class WindowController : ControllerBase
     {
         try
         {
-            if (windowDto.Name == "" || id == Guid.Empty)
+            if (id == Guid.Empty)
                 return BadRequest(new Response { Status = "Ошибка", Message = "Данные не валидны", });
 
             var window = await _windowRepo.FindById(id);
             if (window == null)
                 return NotFound(new Response { Status = "Ошибка", Message = "Окно не найдено", });
-            
-            var windows = await _windowRepo.Get();
-            var cabId = window.CabinetId;
-            var uniqueWindows = windows.Where(w => w.CabinetId == cabId);
-            foreach (var uniqueWindow in uniqueWindows)
-            {
-                if (uniqueWindow.Name == windowDto.Name)
-                    return BadRequest(new Response { Status = "Ошибка", Message = "Окно с таким именем уже есть", });
-            }
 
-            window.Name = windowDto.Name;
+            if(windowDto.Name != null && !string.IsNullOrEmpty(windowDto.Name) && windowDto.Name != "")
+                window.Name = windowDto.Name;
+            
             window.IsActive = windowDto.IsActive;
 
             await _windowRepo.Update(window);

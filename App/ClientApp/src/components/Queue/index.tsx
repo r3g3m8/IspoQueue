@@ -1,4 +1,4 @@
-import { Flex } from 'antd'
+import {Flex, Modal} from 'antd'
 import React, {useState} from 'react'
 import { Container } from 'reactstrap'
 import Button from '../Button/index'
@@ -13,14 +13,26 @@ interface IService {
 
 
 function Queue() {
-    const [services, setServices] = useState<IService[]>([]);
+    const [isModalVisible, setIsModalVisible] = useState(false);
+    const [ticketNumber, setTicketNumber] = useState('');
+    const [serviceName, setServiceName] = useState('');
     const { addTicket } = fetchQueue();
     const fetchServices = async () => {
         //const data = await getServices();
         //setServices(data);
     };
     const handleAddTicket = async (serviceId: number) => {
-        await addTicket(serviceId);
+        const ticket = await addTicket(serviceId);
+        if (ticket) {
+            setTicketNumber(ticket.number);
+            setServiceName(ticket.serviceName);
+            setIsModalVisible(true);
+        }
+    };
+
+    const handleOk = () => {
+        setIsModalVisible(false);
+        window.location.href = '/';
     };
 
   return (
@@ -36,7 +48,18 @@ function Queue() {
                     queue>Прием оригиналов документов об образовании / Выдача документов</Button>
               </Flex>
             </Flex>
-          </Container>
+        <Modal
+            title="Ваш талон"
+            visible={isModalVisible}
+            onOk={handleOk}
+            onCancel={handleOk}
+            width={700}
+            style={{fontSize: '22px'}}
+        >
+            <p>Номер: <b>{ticketNumber}</b></p>
+            <p>Очередь: <b>{serviceName}</b></p>
+        </Modal>
+       </Container>
   )
 }
 

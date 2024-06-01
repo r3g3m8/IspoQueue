@@ -37,6 +37,7 @@ export default function fetchQueue() {
     const addTicket = async (serviceId: number) => {
         try {
             const response = await axios.post('/api/Queue', { serviceId });
+            return response.data;
         } catch (err) {
             const error = err as AxiosError<{ message?: string; status?: string }>;
             if (error.response && error.response.data) {

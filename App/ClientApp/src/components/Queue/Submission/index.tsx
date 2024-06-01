@@ -1,6 +1,6 @@
-import React from 'react';
+import React, {useState} from 'react';
 import { Container } from 'reactstrap';
-import { Flex } from 'antd';
+import {Flex, Modal} from 'antd';
 import Button from '../../Button';
 import Back from '../../../public/Back.svg'
 import { useNavigate } from 'react-router-dom';
@@ -8,11 +8,24 @@ import fetchQueue from "../../../services/fetchQueue";
 import AllServices from 'src/enums/AllServices';
 
 function Submition() {
+    const [isModalVisible, setIsModalVisible] = useState(false);
+    const [ticketNumber, setTicketNumber] = useState('');
+    const [serviceName, setServiceName] = useState('');
     const navigate = useNavigate();
     const { addTicket } = fetchQueue();
 
     const handleAddTicket = async (serviceId: number) => {
-        await addTicket(serviceId);
+        const ticket = await addTicket(serviceId);
+        if (ticket) {
+            setTicketNumber(ticket.number);
+            setServiceName(ticket.serviceName);
+            setIsModalVisible(true);
+        }
+    };
+
+    const handleOk = () => {
+        setIsModalVisible(false);
+        navigate(-1);
     };
 
     return (
@@ -32,6 +45,17 @@ function Submition() {
                                 queue>Оформление личного дела</Button>
                     </Flex>
                 </Flex>
+                <Modal
+                    title="Ваш талон"
+                    visible={isModalVisible}
+                    onOk={handleOk}
+                    onCancel={handleOk}
+                    width={700}
+                    style={{fontSize: '22px'}}
+                >
+                    <p>Номер: <b>{ticketNumber}</b></p>
+                    <p>Очередь: <b>{serviceName}</b></p>
+                </Modal>
             </Container>
         </div>
     )

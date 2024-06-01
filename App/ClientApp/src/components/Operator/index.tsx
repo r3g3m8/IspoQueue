@@ -4,12 +4,14 @@ import NextImage from '../../public/Next.svg'
 import styles from '../Display/display.module.css'
 import axios, {AxiosError} from 'axios'
 import Button from "../Button";
-import {Card, message, notification} from "antd";
+import {Card, Flex, List, message, notification, Space, Switch} from "antd";
 import moment from "moment";
 import Statuses from 'src/enums/Statuses'
 import fetchQueue from "../../services/fetchQueue";
 import {Guid} from "guid-typescript";
 import User from 'src/interfaces/User'
+import Cabinet from "../../interfaces/Cabinet";
+import Windows from "../../interfaces/WIndows";
 
 interface Queue {
     id: Guid;
@@ -17,6 +19,7 @@ interface Queue {
     timeStart: Date | null;
     statusId: number;
     serviceName: string;
+    window: string;
 }
 
 type props = {
@@ -28,13 +31,12 @@ interface Service {
 }
 
 function Operator(props: props) {
-    const [isTimerActive, setIsTimerActive] = useState(false);
     const [next, setNext] = useState<Queue | null>(null);
     const [complete, setComplete] = useState(false);
-    const [remainingTime, setRemainingTime] = useState(0); // Время в секундах (2 минуты)
     const { deleteTicket, deferTicket } = fetchQueue();
     const [services, setServices] = useState<Service[]>([]);
     const [queue, setQueue] = useState<Queue[]>([]);
+    const [cabinet, setCabinet] = useState<Cabinet | null>(null);
 
     const showError = (errorMessage: string) => {
         notification.error({
@@ -56,7 +58,6 @@ function Operator(props: props) {
             setQueue(response.data);
         } catch (err) {
             const error = err as AxiosError<{ message?: string; status?: string }>;
-            console.log(error?.response);
             if (error.response && error.response.data) {
                 message.error(`${error.response.data?.message}`);
             } else {
@@ -69,7 +70,6 @@ function Operator(props: props) {
         try {
             if (props.user == null)
                 return;
-            console.log(props.user);
             const roleIds = props.user.roles.map(role => role.id);
             const params = new URLSearchParams();
             roleIds.forEach(id => params.append('roleId', id));
@@ -90,17 +90,21 @@ function Operator(props: props) {
     };
 
     useEffect(() => {
-        
-        console.log(props.user)
-        if(props.user == null)
+        if(props.user == null){
+            localStorage.removeItem("token");
+            window.location.href = '/login';
             return;
+        }
+           
+        setCabinet(props.user.cabinet);
         fetchData();
         fetchServices()
     }, []);
 
     useEffect(() => {
-        if (queue.length > 0) {
-            const activeItem = queue.find(q => q.statusId === Statuses.Active);
+        const windowNames = props.user?.windows?.map((w: Windows) => w.name);
+        if (queue.length > 0 && windowNames != null) {
+            const activeItem = queue.find((q: Queue) => q.statusId === Statuses.Активен && windowNames.includes(q.window));
             if (activeItem) {
                 setNext(activeItem);
                 setComplete(true);
@@ -113,32 +117,10 @@ function Operator(props: props) {
             setComplete(false);
         }
     }, [queue]);
-    
-    useEffect(() => {
-        let timerInterval;
-
-        // Если таймер активен и осталось время
-        if (isTimerActive && remainingTime > 0) {
-            // Уменьшаем время каждую секунду
-            timerInterval = setTimeout(() => {
-                setRemainingTime((prevTime) => prevTime - 1);
-            }, 1000);
-        } else {
-            // Если время вышло или таймер неактивен, очищаем интервал
-            clearInterval(timerInterval);
-            setIsTimerActive(false);
-        }
-
-        // Очищаем интервал при размонтировании компонента
-        return () => clearInterval(timerInterval);
-    }, [isTimerActive, remainingTime]);
 
     async function handleNext(userId: string | null): Promise<void> {
         try {
             const response = await axios.put('/api/Queue', {userId})
-            console.log(response.data);
-            setIsTimerActive(true);
-            setRemainingTime(10); // Сброс времени на начальное значение
             setNext(response.data);
             setComplete(true);
             await fetchData();
@@ -170,12 +152,34 @@ function Operator(props: props) {
         }
     };
 
+    const handleWindowStatusChange = async (windowId: string, isActive: boolean) => {
+        try {
+            const data = {
+                Id: windowId,
+                Name: null,
+                IsActive: isActive,
+            }
+            const response = await axios.put(`/api/Window/${windowId}`, data);
+            if(response.status == 200) {
+                message.success('Статус окна обновлен успешно');
+                window.location.reload();
+            }
+        } catch (err) {
+            const error = err as AxiosError<{ message?: string; status?: string }>;
+            if (error.response && error.response.data) {
+                showError(`${error.response.data?.message}`);
+            } else {
+                showError('Возникла непредвиденная ошибка при обновлении статуса окна. Попробуйте снова!');
+            }
+        }
+    };
+
     const queueData = queue.length > 0 ? queue.map((q) => {
         return <tr key={q.id.toString()}>
             <td>{q.number}</td>
             <td>{q.serviceName}</td>
-            <td className={q.statusId === Statuses.Completed ?
-                styles.completed : q.statusId === Statuses.Active ?
+            <td className={q.statusId === Statuses.Завершен ?
+                styles.completed : q.statusId === Statuses.Активен ?
                     styles.active : styles.waiting}>{Statuses[q.statusId]}</td>
         </tr>
     }) : <></>
@@ -184,21 +188,55 @@ function Operator(props: props) {
     
     return (
         <Container>
-            <h1>Вы оператор, который работает с очередью:</h1>
-            <ul>
-                {services.map((s) => {
-                    return <>
-                        <li key={s.id}>{s.name}</li>
-                    </>
-                })}
-            </ul>
-            <Container className='w-50 m-0 p-0'>
-                {!isTimerActive && !complete ? <Button onClick={() => handleNext(props.user!.id)} next>
-                    Следующий <img src={NextImage} width={35} className='mx-2'></img>
-                </Button> : <Button disabled>Осталось времени: {remainingTime}</Button>}
-            </Container>
+            <Flex justify={"space-between"}>
+                <Flex vertical>
+                    <div>
+                        <h1>Вы оператор, который работает с очередью:</h1>
+                        <ul>
+                            {services.map((s) => {
+                                return <>
+                                    <li key={s.id}>{s.name}</li>
+                                </>
+                            })}
+                        </ul>
+                    </div>
+                    <Container className='w-50 m-0 p-0'>
+                        {!complete ? <Button onClick={() => handleNext(props.user!.id)} next>
+                            Следующий <img src={NextImage} width={35} className='mx-2'></img>
+                        </Button> : <Button disabled>Чтобы вызвать следующего абитуриента - отожите или завершите текущую заявку</Button>}
+                    </Container>
+                </Flex>
+                
+                <div>
+                    {cabinet && props.user && (
+                        <>
+                            <h3>Кабинет и окна:</h3>
+                            <Card key={cabinet.id} title={`Кабинет: ${cabinet.name}`} style={{ border: '1px solid #319F42' }}>
+                                <List
+                                    dataSource={props.user.windows}
+                                    renderItem={(window) => (
+                                        <List.Item key={window.id.toString()}>
+                                            <Space>
+                                                {window.name}
+                                                <Switch
+                                                    title={"Активность"}
+                                                    checked={window.isActive}
+                                                    onChange={(checked) => handleWindowStatusChange(window.id, checked)}
+                                                />
+                                            </Space>
+                                        </List.Item>
+                                    )}
+                                />
+                            </Card>
+                        </>
+                        
+                    )}
+                </div>
+            </Flex>
+           
+            
             {next && 
-                <Card>
+                <Card style={{ border: '1px solid #319F42', marginTop: '1rem' }}>
                     <h5>Текущая заявка:</h5>
                     <table className={styles.table}>
                         <tbody>

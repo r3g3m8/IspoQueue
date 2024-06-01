@@ -60,7 +60,7 @@ public class AuthenticationController : ControllerBase
         var users = await _userRepo.Get();
         var user = users.FirstOrDefault(u => u.Login == loginDto.Login);
         if (user == null || user.PasswordHash != HashPasswordHelper.HashPassowrd(loginDto.Password))
-            return Unauthorized(new { message = "Invalid login or password" });
+            return Unauthorized(new { message = "Неверный логин или пароль" });
 
         var tokenHandler = new JwtSecurityTokenHandler();
         var key = Encoding.ASCII.GetBytes(_configuration["Jwt:Secret"]); // Убедитесь, что это секретный ключ из настроек
@@ -73,7 +73,7 @@ public class AuthenticationController : ControllerBase
                 new Claim(ClaimTypes.PrimarySid, user.Id.ToString()),
                 new Claim(ClaimTypes.NameIdentifier, user.Login),
             }),
-            Expires = DateTime.UtcNow.AddDays(7),
+            Expires = DateTime.UtcNow.AddYears(1),
             SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256Signature)
         };
         if (user.FirstName != null) 
