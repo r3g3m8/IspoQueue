@@ -6,7 +6,6 @@
     width: 100%;
     border: 3px solid green;
     font-size: 22px;
-    margin-top: 2rem;
 }
 
 .table td,
@@ -26,4 +25,9 @@
 
 .waiting {
     color: #184bb8;
+}
+
+.align {
+    text-align: center;
+    margin: 1rem auto;
 }

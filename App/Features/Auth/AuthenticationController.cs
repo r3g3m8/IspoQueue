@@ -2,6 +2,7 @@ using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Security.Cryptography;
 using System.Text;
+using Castle.Components.DictionaryAdapter.Xml;
 using IspoQueue.App.Repositories;
 using IspoQueue.DAL.Helpers;
 using IspoQueue.DAL.Models;
@@ -52,6 +53,24 @@ public class AuthenticationController : ControllerBase
             return Unauthorized(new { valid = false });
         }
     }
+    
+    [HttpGet("logout")]
+    public async Task<IActionResult> Logout([FromQuery] LoginDto loginDto)
+    {
+        try
+        {
+            var users = await _userRepo.Get();
+            var user = users.FirstOrDefault(u => u.Login == loginDto.Login);
+            if (user == null || user.PasswordHash != HashPasswordHelper.HashPassowrd(loginDto.Password))
+                return Unauthorized(new { message = "Неверный пароль" });
+
+            return Ok(new { logout = true });
+        }
+        catch (Exception)
+        {
+            return Unauthorized(new { logout = false });
+        }
+    }
 
 
     [HttpPost("login")]
@@ -60,7 +79,7 @@ public class AuthenticationController : ControllerBase
         var users = await _userRepo.Get();
         var user = users.FirstOrDefault(u => u.Login == loginDto.Login);
         if (user == null || user.PasswordHash != HashPasswordHelper.HashPassowrd(loginDto.Password))
-            return Unauthorized(new { message = "Неверный логин или пароль" });
+            return Ok(new { message = "Неверный логин или пароль" });
 
         var tokenHandler = new JwtSecurityTokenHandler();
         var key = Encoding.ASCII.GetBytes(_configuration["Jwt:Secret"]); // Убедитесь, что это секретный ключ из настроек

@@ -219,6 +219,8 @@ const CabinetsAndWindows = () => {
                 <Modal
                     title={isEditing ? 'Редактировать' : 'Добавить'}
                     open={isModalVisible}
+                    okText={isEditing ? 'Изменить' : 'Добавить'}
+                    cancelText={"Отмена"}
                     onOk={handleOk}
                     onCancel={handleCancel}
                 >

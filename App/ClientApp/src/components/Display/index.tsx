@@ -2,7 +2,6 @@ import React, { useEffect, useState } from 'react'
 import { Container } from 'reactstrap'
 import styles from './display.module.css'
 import fetchQueue from '../../services/fetchQueue';
-import moment from "moment/moment";
 import {Flex} from "antd";
 import Statuses from "../../enums/Statuses";
 
