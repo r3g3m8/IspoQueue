@@ -64,13 +64,14 @@ public class QueueController : ControllerBase
         }
         catch (Exception ex)
         {
-            return StatusCode(500, new Response() { Status = "Ошибка", Message = $"Сервер выдал ошибку: {ex.Message}" });
+            return StatusCode(500,
+                new Response() { Status = "Ошибка", Message = $"Сервер выдал ошибку: {ex.Message}" });
         }
     }
-    
+
     // todo никогда не используется?
     [HttpGet("active")]
-    public async Task<ActionResult<IEnumerable<QueueDto>>> GetActiveQueue() 
+    public async Task<ActionResult<IEnumerable<QueueDto>>> GetActiveQueue()
     {
         try
         {
@@ -117,15 +118,18 @@ public class QueueController : ControllerBase
             var user = await _userRepo.FindById(operatorRequest.UserId);
             if (user is null)
                 return NotFound(new Response() { Message = "Оператор не найден. Войдите заного", Status = "Ошибка" });
-            
+
             var roles = user.UserRoles.Select(ur => ur.RoleId);
-            if(roles.Equals(Enumerable.Empty<Guid>()))
+            if (roles.Equals(Enumerable.Empty<Guid>()))
                 return BadRequest(new Response() { Message = "У оператора нет ролей", Status = "Ошибка" });
             var services = await _roleServicesRepo.Get();
             var userServices = services.Where(s => roles.Contains(s.RoleId)).Select(s => s.ServiceId);
-            if(userServices.Equals(Enumerable.Empty<int>()))
-                return BadRequest(new Response() { Message = "Оператор не работает ни с 1 очередью. Обратитесь к администратору!", Status = "Ошибка" });
-            
+            if (userServices.Equals(Enumerable.Empty<int>()))
+                return BadRequest(new Response()
+                {
+                    Message = "Оператор не работает ни с 1 очередью. Обратитесь к администратору!", Status = "Ошибка"
+                });
+
             if (queueItems != null)
             {
                 var lastQueue = queueItems
@@ -138,8 +142,9 @@ public class QueueController : ControllerBase
                     var window = userWindows
                         .Select(w => w.Window)
                         .Where(w => w.IsActive);
-                    if(window == null || !window.Any())
-                        return BadRequest(new Response() { Message = "У оператора нет активных окон", Status = "Ошибка" });
+                    if (window == null || !window.Any())
+                        return BadRequest(new Response()
+                            { Message = "У оператора нет активных окон", Status = "Ошибка" });
 
                     queueDto.Add(new QueueDto
                     {
@@ -154,11 +159,13 @@ public class QueueController : ControllerBase
                     });
                 }
             }
-            return Ok (queueDto);
+
+            return Ok(queueDto);
         }
         catch (Exception ex)
         {
-            return StatusCode(500, new Response() { Status = "Ошибка", Message = $"Сервер выдал ошибку: {ex.Message}" });
+            return StatusCode(500,
+                new Response() { Status = "Ошибка", Message = $"Сервер выдал ошибку: {ex.Message}" });
         }
     }
 
@@ -167,7 +174,7 @@ public class QueueController : ControllerBase
     {
         if (request.ServiceId == 0)
             return BadRequest(new Response { Status = "Ошибка", Message = "Данные не передаются", });
-        
+
         var serviceId = request.ServiceId;
         var service = await _serviceRepo.FindById(serviceId);
         if (service == null)
@@ -182,7 +189,7 @@ public class QueueController : ControllerBase
         var statuses = await _statusRepo.Get();
         if (statuses is null)
             return BadRequest(new Response { Status = "Ошибка", Message = "Cтатусы не найдены", });
-        
+
         var waitingStatus = statuses.FirstOrDefault(s => s.Id == (int)Status.Waiting);
         if (waitingStatus is null)
             return BadRequest(new Response { Status = "Ошибка", Message = "Cтатус В ожидании не найден", });
@@ -202,7 +209,7 @@ public class QueueController : ControllerBase
         try
         {
             await _queueRepo.Create(queueItem);
-            return Ok(new QueueDto() {Number = queueItem.Number, ServiceName = service.Name});
+            return Ok(new QueueDto() { Number = queueItem.Number, ServiceName = service.Name });
         }
         catch (Exception ex)
         {
@@ -238,16 +245,16 @@ public class QueueController : ControllerBase
                 // Взяли все роли у пользователя
                 var userRoles = usersRoles.Where(role => role.UserId == userId).Select(x => x?.RoleId).ToArray();
 
-                if (userRoles == null)
+                if (userRoles == Array.Empty<Guid?>())
                     return BadRequest(new Response { Status = "Ошибка", Message = "У пользователя не ролей" });
-                
+
                 // Получить все сервисы по ролям пользователя
                 var servicesToRole = await _roleServicesRepo.Get();
-                var roleServices = servicesToRole
+                var serviceIds = servicesToRole
                     .Where(s => userRoles.Contains(s.RoleId))
                     .Select(service => service?.ServiceId);
 
-                if (roleServices == null)
+                if (serviceIds == Enumerable.Empty<int>())
                     return BadRequest(new Response { Status = "Ошибка", Message = "Нет услуг" });
 
                 //Get all queue
@@ -256,37 +263,35 @@ public class QueueController : ControllerBase
                 if (queue == null)
                     return BadRequest(new Response { Status = "Ошибка", Message = "Очередь пуста" });
 
-                //Take first queue item
-                foreach (var service in roleServices)
+                var queueItem = queue
+                    .OrderBy(q => q.CreationTime)
+                    .FirstOrDefault(item => serviceIds.Contains(item.ServiceId)
+                                            && item.StatusId != (int)Status.Active
+                                            && item.StatusId != (int)Status.Completed);
+                if (queueItem != null)
                 {
-                    var queueItem = queue
-                        .OrderBy(q => q.CreationTime)
-                        .FirstOrDefault(item => item.ServiceId == service 
-                            && item.StatusId != (int)Status.Active
-                                && item.StatusId != (int)Status.Completed);
-                    if (queueItem != null)
-                    {
-                        queueItem.TimeStart = DateTime.UtcNow;
-                        queueItem.StatusId = (int)DAL.Enums.Status.Active;
-                        queueItem.WindowId = operatorActiveWindow;
+                    queueItem.TimeStart = DateTime.UtcNow;
+                    queueItem.StatusId = (int)DAL.Enums.Status.Active;
+                    queueItem.WindowId = operatorActiveWindow;
 
-                        await _queueRepo.Update(queueItem);
-                        var queueDto = new QueueDto
-                        {
-                            Id = queueItem.Id,
-                            Number = queueItem.Number,
-                            CreationTime = queueItem.CreationTime,
-                            TimeStart = queueItem.TimeStart,
-                            TimeEnd = queueItem.TimeEnd,
-                            StatusId = queueItem.StatusId,
-                            ServiceName = queueItem.Service.Name,
-                            Window = queueItem.Window?.Name
-                        };
-                        return Ok(queueDto);
-                    }
+                    await _queueRepo.Update(queueItem);
+                    var queueDto = new QueueDto
+                    {
+                        Id = queueItem.Id,
+                        Number = queueItem.Number,
+                        CreationTime = queueItem.CreationTime,
+                        TimeStart = queueItem.TimeStart,
+                        TimeEnd = queueItem.TimeEnd,
+                        StatusId = queueItem.StatusId,
+                        ServiceName = queueItem.Service.Name,
+                        Window = queueItem.Window?.Name
+                    };
+                    return Ok(queueDto);
                 }
+
                 return BadRequest(new Response { Status = "Ошибка", Message = "Нет подходящего статуса заявки" });
             }
+
             return BadRequest(new Response { Status = "Ошибка", Message = "У оператора нет ролей" });
         }
         catch (Exception ex)
@@ -294,7 +299,7 @@ public class QueueController : ControllerBase
             return StatusCode(500, new Response { Status = "Ошибка", Message = $"Заявка не принята. Error: {ex}" });
         }
     }
-    
+
     [HttpDelete("{id}")]
     public async Task<IActionResult> DeleteQueueItem(Guid id)
     {
@@ -303,7 +308,8 @@ public class QueueController : ControllerBase
             var queueItem = await _queueRepo.FindById(id);
             if (queueItem == null)
             {
-                return BadRequest(new Response { Status = "Ошибка", Message = $"Заявка не найдена. Обновите страницу!" });
+                return BadRequest(
+                    new Response { Status = "Ошибка", Message = $"Заявка не найдена. Обновите страницу!" });
             }
 
             await _queueRepo.Delete(queueItem);
@@ -311,10 +317,11 @@ public class QueueController : ControllerBase
         }
         catch (Exception ex)
         {
-            return StatusCode(500, new Response() { Status = "Ошибка", Message = $"Сервер выдал ошибку: {ex.Message}" });
+            return StatusCode(500,
+                new Response() { Status = "Ошибка", Message = $"Сервер выдал ошибку: {ex.Message}" });
         }
     }
-    
+
     [HttpPut("defer/{id}")]
     public async Task<IActionResult> DeferQueueItem(Guid id)
     {
@@ -331,13 +338,14 @@ public class QueueController : ControllerBase
             queueItem.TimeStart = null;
             queueItem.StatusId = (int)DAL.Enums.Status.Cancelled;
             queueItem.WindowId = null;
-    
+
             await _queueRepo.Update(queueItem);
             return Ok(new Response { Status = "Успех", Message = $"Заявка отложена" });
         }
         catch (Exception ex)
         {
-            return StatusCode(500, new Response() { Status = "Ошибка", Message = $"Сервер выдал ошибку: {ex.Message}" });
+            return StatusCode(500,
+                new Response() { Status = "Ошибка", Message = $"Сервер выдал ошибку: {ex.Message}" });
         }
     }
 }

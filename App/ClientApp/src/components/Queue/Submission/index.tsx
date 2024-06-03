@@ -46,13 +46,17 @@ function Submition() {
                     </Flex>
                 </Flex>
                 <Modal
-                    title="Ваш талон"
-                    visible={isModalVisible}
+                    title={<div style={{ fontSize: '24px' }}>Ваш талон</div>}
+                    open={isModalVisible}
                     onOk={handleOk}
-                    onCancel={handleOk}
                     width={700}
-                    style={{fontSize: '22px'}}
-                >
+                    closable={false}
+                    styles={ {body: {fontSize: '24px'}}}
+                    footer={[
+                        <Button key="ok" onClick={handleOk}>
+                            OK
+                        </Button>
+                    ]}>
                     <p>Номер: <b>{ticketNumber}</b></p>
                     <p>Очередь: <b>{serviceName}</b></p>
                 </Modal>

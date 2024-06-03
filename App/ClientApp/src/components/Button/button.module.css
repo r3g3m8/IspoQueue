@@ -25,9 +25,6 @@
     padding: 2rem 7rem;
     font-size: 1.2rem;
     width: 700px;
-    /*width: 100%;
-    text-align: center;
-    cursor: pointer;*/
 }
 
 .next {
@@ -79,13 +76,14 @@
     width: 100%;
 }
 
-.link {
+.ghost {
     background: transparent;
-    color: var(--title);
+    padding: 0.5em; 
+    border: none;
 }
 
-.link:hover {
-    text-decoration: underline;
+.ghost:hover {
+    background: red;
 }
 
 .disabled {

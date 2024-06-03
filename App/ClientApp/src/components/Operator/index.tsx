@@ -37,6 +37,7 @@ function Operator(props: props) {
     const [services, setServices] = useState<Service[]>([]);
     const [queue, setQueue] = useState<Queue[]>([]);
     const [cabinet, setCabinet] = useState<Cabinet | null>(null);
+    const [hasActiveWindows, setHasActiveWindows] = useState(false);
 
     const showError = (errorMessage: string) => {
         notification.error({
@@ -99,6 +100,7 @@ function Operator(props: props) {
         setCabinet(props.user.cabinet);
         fetchData();
         fetchServices()
+        checkActiveWindows();
     }, []);
 
     useEffect(() => {
@@ -152,6 +154,13 @@ function Operator(props: props) {
         }
     };
 
+    const checkActiveWindows = () => {
+        if (props.user && props.user.windows) {
+            const activeWindows = props.user.windows.some((w: Windows) => w.isActive);
+            setHasActiveWindows(activeWindows);
+        }
+    };
+
     const handleWindowStatusChange = async (windowId: string, isActive: boolean) => {
         try {
             const data = {
@@ -162,6 +171,7 @@ function Operator(props: props) {
             const response = await axios.put(`/api/Window/${windowId}`, data);
             if(response.status == 200) {
                 message.success('Статус окна обновлен успешно');
+                checkActiveWindows();
                 window.location.reload();
             }
         } catch (err) {
@@ -184,14 +194,12 @@ function Operator(props: props) {
         </tr>
     }) : <></>
 
-   
-    
     return (
         <Container>
             <Flex justify={"space-between"}>
                 <Flex vertical>
-                    <div>
-                        <h1>Вы оператор, который работает с очередью:</h1>
+                    <div >
+                        <h1 key={props.user?.id}>Вы оператор, который работает с очередью:</h1>
                         <ul>
                             {services.map((s) => {
                                 return <>
@@ -201,9 +209,17 @@ function Operator(props: props) {
                         </ul>
                     </div>
                     <Container className='w-50 m-0 p-0'>
-                        {!complete ? <Button onClick={() => handleNext(props.user!.id)} next>
-                            Следующий <img src={NextImage} width={35} className='mx-2'></img>
-                        </Button> : <Button disabled>Чтобы вызвать следующего абитуриента - отожите или завершите текущую заявку</Button>}
+                        {hasActiveWindows ? (
+                            !complete ? (
+                                <Button onClick={() => handleNext(props.user!.id)} next>
+                                    Следующий <img src={NextImage} width={35} className='mx-2'></img>
+                                </Button>
+                            ) : (
+                                <Button disabled>Чтобы вызвать следующего абитуриента - отожите или завершите текущую заявку</Button>
+                            )
+                        ) : (
+                            <p>Нет активных окон. Пожалуйста, активируйте хотя бы одно окно, чтобы продолжить работу</p>
+                        )}
                     </Container>
                 </Flex>
                 
@@ -249,7 +265,7 @@ function Operator(props: props) {
                     </table>
                 </Card>
                 }
-            
+            <h3 className={styles.align}>Ход очереди</h3>
             <table className={styles.table}>
                     <thead>
                         <tr>

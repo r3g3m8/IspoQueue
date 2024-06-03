@@ -1,93 +1,51 @@
-import React, {useEffect, useState} from 'react';
-import {useNavigate} from 'react-router-dom';
+import React, { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import Admin from './Admin';
 import Display from './Display';
 import Operator from './Operator';
 import Queue from './Queue';
-import axios, {AxiosError} from "axios";
-import {jwtDecode} from "jwt-decode";
-import {message} from "antd";
-import User from "../interfaces/User";
-
-type Role = 'Дисплей' | 'Администратор' | 'Оператор' | 'Терминал' | null;
-
-interface JwtPayload {
-    primarysid: string,
-    role: Role;
-}
+import axios from 'axios';
+import User from '../interfaces/User';
+import {useAuth} from "./AuthContext";
 
 function Home() {
-    const [isAuthenticated, setIsAuthenticated] = useState(false); // cookie check???
-    const [role, setRole] = useState<Role>(null);
+    const { isAuthenticated, userRole, userId } = useAuth();
     const [user, setUser] = useState<User | null>(null);
     const navigate = useNavigate();
 
-    const fetchUser = async (id: string) => {
-        try {
-            const response = await axios.get(`/api/User/${id}`);
-            console.log(response.data)
-            setUser(response.data);
-        } catch (err) {
-            localStorage.removeItem('token');
-            navigate('/login');
-        }
-    };
-
     useEffect(() => {
-        const token = localStorage.getItem('token');
-        if (token) {
-            const decoded = jwtDecode(token) as JwtPayload;
-            //setRole(decoded);
+        const fetchUser = async (id: string) => {
+            try {
+                const response = await axios.get(`/api/User/${id}`);
+                setUser(response.data);
+            } catch (err) {
+                localStorage.removeItem('token');
+                navigate('/login');
+            }
+        };
 
-            axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
-            axios.get('/api/Authentication/verify-token')
-                .then(response => {
-                    if (!response.data.valid) {
-                        localStorage.removeItem('token');
-                        navigate('/login');
-                    }
-                    if(decoded.role == null ) {
-                        return;
-                    }
-                    fetchUser(decoded.primarysid);
-                    console.log(decoded);
-                    
-                    if (decoded.role.includes('Оператор')) {
-                        setRole('Оператор');
-                    } else if (decoded.role === 'Администратор') {
-                        setRole('Администратор');
-                    } else if (decoded.role === 'Дисплей') {
-                        setRole('Дисплей');
-                    } else if (decoded.role === 'Терминал') {
-                        setRole('Терминал');
-                    }
-                    setIsAuthenticated(true);
-                })
-                .catch(error => {
-                    localStorage.removeItem('token');
-                    navigate('/login');
-                });
-        } else {
-            navigate('/login');
+        if (isAuthenticated && (userRole === 'Оператор' || userRole === 'Администратор')) {
+            fetchUser(userId);
         }
-    }, [navigate]);
+    }, [isAuthenticated, userRole, userId, navigate]);
 
-  return (
-      <>
-          {isAuthenticated && user && (<div>
-              {role === 'Администратор' ? (
-                  <Admin />
-              ) : role === 'Дисплей' ? (
-                  <Display />
-              ) : role === 'Оператор' ? (
-                  <Operator user={user}/>
-              ) : (
-                  <Queue />
-              )}
-          </div>) }
-      </>
-  );
+    return (
+        <>
+            {isAuthenticated && (
+                <div>
+                    {userRole === 'Администратор' ? (
+                        <Admin />
+                    ) : userRole === 'Дисплей' ? (
+                        <Display />
+                    ) : userRole === 'Оператор' && user ? (
+                        <Operator user={user} />
+                    ) : userRole === 'Терминал' ? (
+                        <Queue />
+                    ) : <></>}
+                </div>
+            )}
+        </>
+    );
 }
 
 export default Home;
-

@@ -6,9 +6,9 @@ type props = {
     onClick?: () => void;
     next?: boolean;
     queue?: boolean;
+    ghost?: boolean;
     outline?: boolean;
     expand?: boolean;
-    link?: boolean;
     dashed?: boolean;
     className?: string;
     destructive?: boolean;
@@ -28,8 +28,8 @@ export default function Button(props: props) {
         button_styles += " " + styles.queue;
     }
 
-    if (props.link) {
-        button_styles += " " + styles.link;
+    if (props.ghost) {
+        button_styles += " " + styles.ghost;
     }
 
     if (props.dashed) {

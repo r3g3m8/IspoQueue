@@ -5,22 +5,12 @@ import Button from '../Button/index'
 import fetchQueue from "../../services/fetchQueue";
 import AllServices from 'src/enums/AllServices';
 
-interface IService {
-    id: number;
-    name: string;
-    identityStr: string;
-}
-
-
 function Queue() {
     const [isModalVisible, setIsModalVisible] = useState(false);
     const [ticketNumber, setTicketNumber] = useState('');
     const [serviceName, setServiceName] = useState('');
     const { addTicket } = fetchQueue();
-    const fetchServices = async () => {
-        //const data = await getServices();
-        //setServices(data);
-    };
+
     const handleAddTicket = async (serviceId: number) => {
         const ticket = await addTicket(serviceId);
         if (ticket) {
@@ -49,13 +39,17 @@ function Queue() {
               </Flex>
             </Flex>
         <Modal
-            title="Ваш талон"
-            visible={isModalVisible}
+            title={<div style={{ fontSize: '24px' }}>Ваш талон</div>}
+            open={isModalVisible}
             onOk={handleOk}
-            onCancel={handleOk}
             width={700}
-            style={{fontSize: '22px'}}
-        >
+            closable={false}
+            styles={ {body: {fontSize: '24px'}}}
+            footer={[
+                <Button key="ok" onClick={handleOk}>
+                    OK
+                </Button>
+            ]}>
             <p>Номер: <b>{ticketNumber}</b></p>
             <p>Очередь: <b>{serviceName}</b></p>
         </Modal>
