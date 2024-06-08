@@ -72,12 +72,13 @@ const CabinetsAndWindows = () => {
         }
     };
 
-    const handleAddWindow = (cabinet) => {
-        setSelectedWindow(null);
-        setSelectedCabinet(cabinet);
+    const handleAddWindow = (window) => {
+        setSelectedCabinet(null);
+        setIsEditing(false);
+        setIsWindow(true);
+        setSelectedCabinet(window);
         form.resetFields();
         setIsModalVisible(true);
-        setIsWindow(true);
     };
 
     const handleEditWindow = (window) => {
@@ -121,12 +122,12 @@ const CabinetsAndWindows = () => {
                     message.success('Окно обновлено успешно');
                 }
             } else {
-                if (selectedCabinet) {
-                    await axios.post(`/api/window/${selectedCabinet.id}`, values);
-                    message.success('Окно добавлено успешно');
-                } else {
+                if (selectedCabinet && !isWindow) {
                     await axios.post('/api/cabinet', values);
                     message.success('Кабинет добавлен успешно');
+                } if(isWindow && selectedCabinet) {
+                    await axios.post(`/api/window/${selectedCabinet.id}`, values);
+                    message.success('Окно добавлено успешно');
                 }
             }
             await fetchCabinets();

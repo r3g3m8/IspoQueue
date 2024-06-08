@@ -90,6 +90,15 @@ public class CabinetController : ControllerBase
             {
                 return NotFound(new Response { Status = "Ошибка", Message = "Кабинет не найден", });
             }
+            
+            var allCabinets = await _cabinetRepo.Get();
+            foreach (var cabinets in allCabinets)
+            {
+                if (cabinets.Name == cabinetDto.Name)
+                {
+                    return BadRequest(new Response { Status = "Ошибка", Message = "Кабинет уже существует", });
+                }
+            }
 
             cabinet.Name = cabinetDto.Name;
 

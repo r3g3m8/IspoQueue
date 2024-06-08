@@ -79,7 +79,7 @@ public class AuthenticationController : ControllerBase
         var users = await _userRepo.Get();
         var user = users.FirstOrDefault(u => u.Login == loginDto.Login);
         if (user == null || user.PasswordHash != HashPasswordHelper.HashPassowrd(loginDto.Password))
-            return Ok(new { message = "Неверный логин или пароль" });
+            return BadRequest(new { message = "Неверный логин или пароль" });
 
         var tokenHandler = new JwtSecurityTokenHandler();
         var key = Encoding.ASCII.GetBytes(_configuration["Jwt:Secret"]); // Убедитесь, что это секретный ключ из настроек

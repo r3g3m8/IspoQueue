@@ -62,18 +62,18 @@ public class WindowController : ControllerBase
         try
         {
             if (windowDto == null || cabinetId == Guid.Empty)
-                return Ok(new Response { Status = "Ошибка", Message = "Данные не валидны", });
+                return BadRequest(new Response { Status = "Ошибка", Message = "Данные не валидны", });
 
             var cabinet = await _cabinetRepo.FindById(cabinetId);
             if(cabinet == null)
-                return Ok(new Response { Status = "Ошибка", Message = "Кабинет не найден", });
+                return BadRequest(new Response { Status = "Ошибка", Message = "Кабинет не найден", });
 
             var windows = await _windowRepo.Get();
             var uniqueWindows = windows.Where(w => w.CabinetId == cabinetId);
             foreach (var uniqueWindow in uniqueWindows)
             {
                 if (uniqueWindow.Name == windowDto.Name)
-                    return Ok(new Response { Status = "Ошибка", Message = "Окно с таким именем уже есть", });
+                    return BadRequest(new Response { Status = "Ошибка", Message = "Окно с таким именем уже есть", });
             }
 
             var window = new Window
@@ -104,6 +104,15 @@ public class WindowController : ControllerBase
             var window = await _windowRepo.FindById(id);
             if (window == null)
                 return NotFound(new Response { Status = "Ошибка", Message = "Окно не найдено", });
+
+            var allWindows = await _windowRepo.Get();
+            foreach (var windows in allWindows)
+            {
+                if (windows.Name == windowDto.Name && windows.CabinetId == window.CabinetId)
+                {
+                    return BadRequest(new Response { Status = "Ошибка", Message = "Окно уже существует", });
+                }
+            }
 
             if(windowDto.Name != null && !string.IsNullOrEmpty(windowDto.Name) && windowDto.Name != "")
                 window.Name = windowDto.Name;

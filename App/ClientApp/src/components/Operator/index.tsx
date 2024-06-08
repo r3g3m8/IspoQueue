@@ -233,7 +233,7 @@ function Operator(props: props) {
                                     renderItem={(window) => (
                                         <List.Item key={window.id.toString()}>
                                             <Space>
-                                                {window.name}
+                                                Окно {window.name}
                                                 <Switch
                                                     title={"Активность"}
                                                     checked={window.isActive}
