@@ -234,7 +234,7 @@ function Admin() {
         }
     };
 
-    const handleEditUser = (user: User) => {
+    const handleEditUser = async (user: User) => {
         setSelectedUser(user);
         setLogin(user.login);
         setPassword(''); // Не заполняйте пароль
@@ -243,6 +243,7 @@ function Admin() {
         setSecondName(user.secondName);
         setSelectedWindows(user.windows)
         setUser(true);
+        await fetchWindowsByCabinet(user.cabinet.id)
     };
 
     const handleDeleteUser = async (id: string) => {

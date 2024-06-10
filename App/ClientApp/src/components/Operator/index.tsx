@@ -120,6 +120,10 @@ function Operator(props: props) {
         }
     }, [queue]);
 
+    setTimeout(function(){
+        fetchData();
+    }, 5000);
+
     async function handleNext(userId: string | null): Promise<void> {
         try {
             const response = await axios.put('/api/Queue', {userId})
