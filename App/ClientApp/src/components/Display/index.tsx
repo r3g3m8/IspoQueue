@@ -16,23 +16,24 @@ function Display() {
     const [queue, setQueue] = useState<Queue[]>([]);
     const [activeQueue, setActiveQueue] = useState<Queue[]>([]);
     const { getQueue, getActiveQueue } = fetchQueue();
-
+    const fetchData = async () => {
+        try {
+            const response = await getQueue();
+            const activeRes = await getActiveQueue();// Замените '/queue' на путь к вашему контроллеру на бэкенде
+            setQueue(response);
+            setActiveQueue(activeRes)
+        } catch (error) {
+            console.error('Ошибка при загрузке очереди:', error);
+        }
+    };
     useEffect(() => {
-        const fetchData = async () => {
-            try {
-                const response = await getQueue();
-                const activeRes = await getActiveQueue();// Замените '/queue' на путь к вашему контроллеру на бэкенде
-                setQueue(response);
-                setActiveQueue(activeRes)
-            } catch (error) {
-                console.error('Ошибка при загрузке очереди:', error);
-            }
-        };
-
         fetchData();
-        console.log(queue);
     }, []);
-
+    
+    setTimeout(function(){
+        fetchData();
+    }, 5000);
+    
     const waiting = queue.length > 0 ? queue.map(q => (
         <tr key={q.id}>
             <td>{q.number}</td>
