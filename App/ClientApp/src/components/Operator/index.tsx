@@ -122,7 +122,7 @@ function Operator(props: props) {
 
     setTimeout(function(){
         fetchData();
-    }, 5000);
+    }, 500);
 
     async function handleNext(userId: string | null): Promise<void> {
         try {
@@ -200,7 +200,7 @@ function Operator(props: props) {
 
     return (
         <Container>
-            <Flex justify={"space-between"}>
+            <Flex justify={"space-between"} className={styles.flex}>
                 <Flex vertical>
                     <div >
                         <h1 key={props.user?.id}>Вы оператор, который работает с очередью:</h1>

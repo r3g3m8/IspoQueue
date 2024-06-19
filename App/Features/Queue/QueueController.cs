@@ -40,6 +40,7 @@ public class QueueController : ControllerBase
     {
         try
         {
+            Response.Headers.Add("Refresh", "3");
             var allQueue = await _queueRepo.Get();
             List<QueueDto> queueDto = new List<QueueDto>();
 
@@ -109,6 +110,7 @@ public class QueueController : ControllerBase
     {
         try
         {
+            Response.Headers.Add("Refresh", "3");
             var queueItems = await _queueRepo.Get();
             List<QueueDto> queueDto = new List<QueueDto>();
 
