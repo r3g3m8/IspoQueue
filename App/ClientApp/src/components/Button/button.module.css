@@ -3,7 +3,7 @@
     border: 1px solid transparent;
     color: #fff;
     border-radius: 20px;
-    padding: 0.7rem 3rem;
+    padding: 0.7rem 1.5rem;
     margin: 1rem 0;
     width: 100%;
     font-size: 1rem;
@@ -27,8 +27,15 @@
     width: 700px;
 }
 
+@media (max-width: 768px) {
+    .queue{
+        max-width: 300px;
+        padding: 1.5rem 4rem; /* Increases padding for larger screens */
+        font-size: 1.5rem; /* Increases font size for larger screens */
+    }
+}
+
 .next {
-    width: 75%;
     font-size: 1.5rem;
 }
 

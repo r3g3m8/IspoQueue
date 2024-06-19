@@ -32,7 +32,7 @@ function Display() {
     
     setTimeout(function(){
         fetchData();
-    }, 5000);
+    }, 500);
     
     const waiting = queue.length > 0 ? queue.map(q => (
         <tr key={q.id}>
@@ -51,7 +51,7 @@ function Display() {
 
     return (
         <Container>
-            <Flex justify={"space-between"}>
+            <Flex justify={"space-between"} className={styles.flex}>
                 <div className={styles.queues}>
                     <table className={styles.table}>
                         <thead>
